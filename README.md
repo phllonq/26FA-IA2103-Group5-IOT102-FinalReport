@@ -11,8 +11,8 @@
 ## 📌 1. Giới thiệu Dự án (Project Overview)
 Đề tài xây dựng hệ thống giám sát môi trường tích hợp trên UAV (Unmanned Aerial Vehicle), giải quyết các thách thức thực tế về sai số đo lường do luồng gió nén từ cánh quạt (*downwash*) và tối ưu hóa hiệu năng truyền thông IoT trong điều kiện tín hiệu suy giảm.
 
-* **Môn học:** IOT102 - Internet of Things (Học kỳ Fall 2026 - Đại học FPT)[cite: 1]
-* **Mô hình tích hợp:** Project-Based Learning (PBL) kết hợp Research-Based Learning (RBL)[cite: 1]
+* **Môn học:** IOT102 - Internet of Things (Học kỳ Fall 2026 - Đại học FPT)
+* **Mô hình tích hợp:** Project-Based Learning (PBL) kết hợp Research-Based Learning (RBL)
 
 ---
 
@@ -33,13 +33,13 @@ Hệ thống được thiết kế theo **Kiến trúc 2 luồng độc lập (D
 ```text
 26FA_SE201868_G1_IOT102_FinalReport/
 ├── README.md                   # Hướng dẫn tổng quan & quy trình chạy dự án
-├── Documents/                  # Báo cáo IEEE (PDF/LaTeX) & Slide thuyết trình[cite: 1]
-├── AI_Audit_Log/               # File NỘP RIÊNG ghi nhận 3-5 quyết định kỹ thuật AI[cite: 1]
+├── Documents/                  # Báo cáo IEEE (PDF/LaTeX) & Slide thuyết trình
+├── AI_Audit_Log/               # File NỘP RIÊNG ghi nhận 3-5 quyết định kỹ thuật AI
 ├── Dataset/                    # Dữ liệu thô thực nghiệm (RQ1 & RQ2 logs)
-├── VideoDemo/                  # File txt chứa link video demo hệ thống (<= 5 phút)[cite: 1]
-└── SourceCode/                 # Mã nguồn toàn bộ hệ thống[cite: 1]
-    ├── Hardware_Design/        # Block Diagram, Flowchart, Schematic & File 3D Shield (.stl)[cite: 1, 2]
+├── VideoDemo/                  # File txt chứa link video demo hệ thống (<= 5 phút)
+└── SourceCode/                 # Mã nguồn toàn bộ hệ thống
+    ├── Hardware_Design/        # Block Diagram, Flowchart, Schematic & File 3D Shield (.stl)
     ├── ESP32_Firmware/         # Code C++ đọc BME280, FSM Hysteresis & MQTT
-    ├── Flight_Controller/      # Cấu hình tham số PX4 & file mission plan waypoint[cite: 2]
-    ├── Data_Analysis/          # Script Python xử lý data, Linear Regression & vẽ đồ thị[cite: 2]
-    └── Web_Dashboard/          # Giao diện Web hiển thị real-time & chỉ số AoI[cite: 2]
+    ├── Flight_Controller/      # Cấu hình tham số PX4 & file mission plan waypoint
+    ├── Data_Analysis/          # Script Python xử lý data, Linear Regression & vẽ đồ thị
+    └── Web_Dashboard/          # Giao diện Web hiển thị real-time & chỉ số AoI
