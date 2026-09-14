@@ -1,5 +1,6 @@
 # Adaptive-IoT-UAV-Monitoring
 
+
 > **Adaptive IoT-UAV Environmental Monitoring System with Downwash-Aware Sensing and Adaptive Communication**
 
 [![Course](https://img.shields.io/badge/Course-IOT102--Fall2026-blue)](https://fpt.edu.vn)
@@ -8,38 +9,31 @@
 
 ---
 
-## 📌 1. Giới thiệu Dự án (Project Overview)
-Đề tài xây dựng hệ thống giám sát môi trường tích hợp trên UAV (Unmanned Aerial Vehicle), giải quyết các thách thức thực tế về sai số đo lường do luồng gió nén từ cánh quạt (*downwash*) và tối ưu hóa hiệu năng truyền thông IoT trong điều kiện tín hiệu suy giảm.
 
-* **Môn học:** IOT102 - Internet of Things (Học kỳ Fall 2026 - Đại học FPT)
-* **Mô hình tích hợp:** Project-Based Learning (PBL) kết hợp Research-Based Learning (RBL)
+## 1. Project Overview
 
----
+## 2. Project Objectives
 
-## 🔍 2. Vấn đề Nghiên cứu (Research Questions)
-* **RQ1 (Downwash-Aware Sensing):** Khảo sát ảnh hưởng của điều kiện bay UAV (Ground, Hover, Forward Flight) đến sai số đo đạc nhiệt độ/độ ẩm của cảm biến BME280; đánh giá hiệu quả của màng chắn thông gió (*Ventilated Pagoda Shield*) kết hợp mô hình hiệu chuẩn Hồi quy tuyến tính (*Linear Regression Calibration*).
-* **RQ2 (Adaptive Communication):** Xây dựng cơ chế truyền thông thích ứng dựa trên cường độ tín hiệu RSSI kết hợp sự biến thiên cảm biến (*Sensor-value variation*) và vùng đệm chống trượt trạng thái (*Hysteresis*); đánh giá sự đánh đổi giữa tỷ lệ giảm gói tin (*Packet Reduction*), độ tin cậy giao gói (*PDR*) và độ tươi dữ liệu (*Age of Information - AoI*).
+## 3. Research Questions
+### RQ1 — Downwash-Aware Sensing
+### RQ2 — Adaptive Communication
 
----
+## 4. Proposed System Architecture
+### UAV Telemetry Layer
+### IoT Payload Layer
 
-## 🏗️ 3. Kiến trúc Hệ thống (System Architecture)
-Hệ thống được thiết kế theo **Kiến trúc 2 luồng độc lập (Dual-Layer Architecture)**:
-1. **UAV Telemetry Layer:** Cảm biến UAV (GPS/IMU/Barometer) ➔ Flight Controller (PX4/ArduPilot) ➔ MAVLink Protocol ➔ Ground Control Station (QGroundControl).
-2. **IoT Payload Layer:** Cảm biến BME280 (Pagoda Shield) ➔ Vi điều khiển ESP32 ➔ Giao thức MQTT ➔ MQTT Broker ➔ Database / Cloud ➔ Web Dashboard real-time.
+## 5. Proposed Experimental Design
+### RQ1
+### RQ2
 
----
+## 6. Planned Hardware & Software
 
-## 📂 4. Cấu trúc Thư mục Dự án (Directory Structure)
-```text
-26FA_SE201868_G1_IOT102_FinalReport/
-├── README.md                   # Hướng dẫn tổng quan & quy trình chạy dự án
-├── Documents/                  # Báo cáo IEEE (PDF/LaTeX) & Slide thuyết trình
-├── AI_Audit_Log/               # File NỘP RIÊNG ghi nhận 3-5 quyết định kỹ thuật AI
-├── Dataset/                    # Dữ liệu thô thực nghiệm (RQ1 & RQ2 logs)
-├── VideoDemo/                  # File txt chứa link video demo hệ thống (<= 5 phút)
-└── SourceCode/                 # Mã nguồn toàn bộ hệ thống
-    ├── Hardware_Design/        # Block Diagram, Flowchart, Schematic & File 3D Shield (.stl)
-    ├── ESP32_Firmware/         # Code C++ đọc BME280, FSM Hysteresis & MQTT
-    ├── Flight_Controller/      # Cấu hình tham số PX4 & file mission plan waypoint
-    ├── Data_Analysis/          # Script Python xử lý data, Linear Regression & vẽ đồ thị
-    └── Web_Dashboard/          # Giao diện Web hiển thị real-time & chỉ số AoI
+## 7. Proposed Directory Structure
+
+## 8. Planned Evaluation Metrics
+
+## 9. Development Roadmap
+
+## 10. AI Usage & Audit
+
+## 11. References
