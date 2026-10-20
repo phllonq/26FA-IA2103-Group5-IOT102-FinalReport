@@ -54,7 +54,7 @@ These are design considerations. They are not claims of measured communication p
 
 ### Alternative A — Direct Wi-Fi + MQTT
 
-**Disposition:** ACCEPTED IN PRINCIPLE FOR PROTOTYPE.
+**Disposition:** PROPOSED FOR PROTOTYPE — TEAM ACCEPTANCE NOT VERIFIED.
 
 Advantages considered:
 
@@ -122,7 +122,7 @@ The date, participant list, and formal approval record should be added from actu
 
 | Decision ID | Engineering Decision | Status |
 |---|---|---|
-| DEC-001 | Direct Wi-Fi + MQTT for initial prototype | ACCEPTED IN PRINCIPLE |
+| DEC-001 | Direct Wi-Fi + MQTT for initial prototype | PROPOSED — TEAM ACCEPTANCE NOT VERIFIED |
 | DEC-002 | Independent sensor polling, FSM, and publishing schedules | PENDING |
 | DEC-003 | MQ-2 measurement and calibration strategy | PENDING |
 | DEC-004 | ESP32 ADC conditioning and protection | PENDING |
