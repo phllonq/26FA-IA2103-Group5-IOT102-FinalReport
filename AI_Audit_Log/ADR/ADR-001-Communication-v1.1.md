@@ -5,7 +5,7 @@
 **Document ID:** ADR-001  
 **Version:** 1.1  
 **Decision Date:** [NOT VERIFIED — draft records 2026-09-22; confirm against primary team records]  
-**Status:** ACCEPTED IN PRINCIPLE — PROTOTYPE ONLY  
+**Status:** DRAFT — ACCEPTANCE IN PRINCIPLE PENDING VERIFICATION OF TEAM RECORDS  
 **Implementation Status:** NOT IMPLEMENTED  
 **Decision Authority:** [TO BE VERIFIED FROM ACTUAL TEAM RECORDS]  
 
@@ -153,7 +153,7 @@ No experimental comparison between these alternatives has been completed.
 
 ## 6. Decisions and Open Issues
 
-The current draft documents the communication architecture as accepted in principle, but supporting team approval evidence remains to be verified. The following engineering issues remain unresolved.
+The current draft proposes direct Wi-Fi + MQTT for the prototype. Whether the team accepted it in principle remains unverified until supporting team approval evidence is checked. The following engineering issues remain unresolved.
 
 | ID | Issue | Status |
 |---|---|---|
@@ -248,7 +248,7 @@ AI-generated recommendations were used as inputs to the engineering review. The 
 
 ## 11. Final Decision Statement
 
-The current draft records **direct Wi-Fi + MQTT as accepted in principle for the initial UAV environmental monitoring prototype**. The decision date and formal team approval have not been independently verified against primary records.
+The current draft proposes **direct Wi-Fi + MQTT for the initial UAV environmental monitoring prototype**. The decision date and formal team approval have not been independently verified against primary records.
 
 The choice is intended to support a relatively simple initial development workflow using ESP32, Wi-Fi, Mosquitto, and MQTT monitoring tools.
 
