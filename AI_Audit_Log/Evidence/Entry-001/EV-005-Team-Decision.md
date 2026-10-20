@@ -5,10 +5,6 @@
 **Audit Entry:** ENTRY-001  
 **Evidence ID:** EV-005  
 **Decision Topic:** Communication Architecture Selection  
-**Decision Status:** ACCEPTED IN PRINCIPLE  
-**Implementation Status:** NOT IMPLEMENTED  
-**Decision Date:** [TO BE CONFIRMED]  
-**Team Participants:** [TO BE RECORDED]  
 **Related ADR:** [ADR-001 v1.1](../../ADR/ADR-001-Communication-v1.1.md)
 
 ## 1. Decision Context
