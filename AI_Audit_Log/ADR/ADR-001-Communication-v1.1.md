@@ -4,10 +4,10 @@
 **Course:** IOT102 — Fall 2026  
 **Document ID:** ADR-001  
 **Version:** 1.1  
-**Decision Date:** 2026-09-22  
+**Decision Date:** [NOT VERIFIED — draft records 2026-09-22; confirm against primary team records]  
 **Status:** ACCEPTED IN PRINCIPLE — PROTOTYPE ONLY  
 **Implementation Status:** NOT IMPLEMENTED  
-**Decision Authority:** Project Team  
+**Decision Authority:** [TO BE VERIFIED FROM ACTUAL TEAM RECORDS]  
 
 ---
 
@@ -37,7 +37,7 @@ The purpose of this ADR is to record the team's communication architecture decis
 
 ## 2. Decision
 
-On 2026-09-22, the team agreed in principle to use **direct Wi-Fi + MQTT as the communication architecture for the initial prototype**.
+The current project draft records direct Wi-Fi + MQTT as the proposed communication architecture for the initial prototype. The date and supporting team approval record have not been independently verified; confirm them against primary team records before treating this as an official decision.
 
 The proposed communication flow is:
 
@@ -153,7 +153,7 @@ No experimental comparison between these alternatives has been completed.
 
 ## 6. Decisions and Open Issues
 
-The team has accepted the communication architecture in principle. The following engineering issues remain unresolved.
+The current draft documents the communication architecture as accepted in principle, but supporting team approval evidence remains to be verified. The following engineering issues remain unresolved.
 
 | ID | Issue | Status |
 |---|---|---|
@@ -248,12 +248,12 @@ AI-generated recommendations were used as inputs to the engineering review. The 
 
 ## 11. Final Decision Statement
 
-On **2026-09-22**, the team agreed in principle to use **direct Wi-Fi + MQTT for the initial UAV environmental monitoring prototype**.
+The current draft records **direct Wi-Fi + MQTT as accepted in principle for the initial UAV environmental monitoring prototype**. The decision date and formal team approval have not been independently verified against primary records.
 
 The choice is intended to support a relatively simple initial development workflow using ESP32, Wi-Fi, Mosquitto, and MQTT monitoring tools.
 
 Operational communication reliability remains unverified. The architecture must be evaluated through future implementation and testing before any claim of reliable UAV communication can be made.
 
-**Final Status:** ACCEPTED IN PRINCIPLE — PROTOTYPE ONLY  
+**Final Status:** ACCEPTED IN PRINCIPLE — PROTOTYPE ONLY [SUPPORTING TEAM RECORD NOT VERIFIED]  
 **Implementation Status:** NOT IMPLEMENTED  
 **Verification Status:** PENDING
