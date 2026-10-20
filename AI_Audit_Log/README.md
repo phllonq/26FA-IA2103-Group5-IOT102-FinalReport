@@ -51,11 +51,13 @@ AI_Audit_Log/
 └── Evidence/
     ├── Entry-001/
     │   ├── Cross-File-Consistency-Report.md
-        ├── EV-001-Gemini-Prompt.md
-        ├── EV-002-Gemini-Response.md
-        ├── EV-003-ChatGPT-Review.md
-        ├── EV-004-Gemini-Self-Review.md
-        └── EV-005-Team-Decision.md
+    │   ├── EV-001-Gemini-Prompt.md
+    │   ├── EV-002-Gemini-Response.md
+    │   ├── EV-003-ChatGPT-Review.md
+    │   ├── EV-004-Gemini-Self-Review.md
+    │   └── EV-005-Team-Decision.md
+    └── Templates/
+        └── AI-Audit-Entry-Template.md
 ```
 
 The inventory reflects the paths visible in the repository at the time of inspection. The `.docx` and `.pdf` files are present but appear to be placeholder-sized files; their contents and usability have not been validated. The reusable entry template and cross-file consistency report are listed below.
