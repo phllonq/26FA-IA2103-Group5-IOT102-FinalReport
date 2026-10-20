@@ -89,7 +89,7 @@ These reasons represent architectural considerations. They are not experimentall
 
 ### Alternative A — Direct Wi-Fi + MQTT
 
-**Status:** ACCEPTED IN PRINCIPLE FOR THE INITIAL PROTOTYPE
+**Status:** PROPOSED FOR THE INITIAL PROTOTYPE — TEAM ACCEPTANCE NOT VERIFIED
 
 Proposed flow:
 
@@ -254,6 +254,6 @@ The choice is intended to support a relatively simple initial development workfl
 
 Operational communication reliability remains unverified. The architecture must be evaluated through future implementation and testing before any claim of reliable UAV communication can be made.
 
-**Final Status:** ACCEPTED IN PRINCIPLE — PROTOTYPE ONLY [SUPPORTING TEAM RECORD NOT VERIFIED]  
+**Final Status:** DRAFT — TEAM ACCEPTANCE NOT VERIFIED  
 **Implementation Status:** NOT IMPLEMENTED  
 **Verification Status:** PENDING
