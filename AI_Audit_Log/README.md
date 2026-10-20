@@ -31,7 +31,7 @@ The exact hardware configuration, implementation progress, and testing status mu
 
 ## 4. Current Decision Snapshot
 
-- **Communication architecture:** Direct Wi-Fi + MQTT is documented as the proposed/accepted-in-principle architecture for the initial prototype.
+- **Communication architecture:** Direct Wi-Fi + MQTT is documented as a proposal for the initial prototype; team acceptance remains NOT VERIFIED.
 - **Decision evidence:** See [ADR-001](ADR/ADR-001-Communication-v1.1.md) and [EV-005](Evidence/Entry-001/EV-005-Team-Decision.md).
 - **Decision date and formal approval:** NOT VERIFIED against primary team records.
 - **Implementation status:** NOT VERIFIED from this audit log alone; consult the team's current source code and hardware records.
@@ -44,12 +44,13 @@ Treat the architecture decision as provisional until the team approval record an
 ```text
 AI_Audit_Log/
 ├── README.md
-├── AI_Audit_Log.docx
-├── AI_Audit_Log.pdf
+├── AI_Audit_Log.docx (content/usability NOT VERIFIED)
+├── AI_Audit_Log.pdf (content/usability NOT VERIFIED)
 ├── ADR/
 │   └── ADR-001-Communication-v1.1.md
 └── Evidence/
-    └── Entry-001/
+    ├── Entry-001/
+    │   ├── Cross-File-Consistency-Report.md
         ├── EV-001-Gemini-Prompt.md
         ├── EV-002-Gemini-Response.md
         ├── EV-003-ChatGPT-Review.md
@@ -57,7 +58,7 @@ AI_Audit_Log/
         └── EV-005-Team-Decision.md
 ```
 
-The inventory reflects the paths visible in the repository at the time of inspection. The `.docx` and `.pdf` files are present but appear to be placeholder-sized files; their contents and usability have not been validated. The template directory referenced in earlier drafts was not present in the inspected repository listing and is therefore not listed here.
+The inventory reflects the paths visible in the repository at the time of inspection. The `.docx` and `.pdf` files are present but appear to be placeholder-sized files; their contents and usability have not been validated. The reusable entry template and cross-file consistency report are listed below.
 
 ## 6. Evidence Classification
 
