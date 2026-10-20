@@ -5,9 +5,9 @@
 **Audit Entry:** ENTRY-001  
 **Evidence ID:** EV-005  
 **Decision Topic:** Communication Architecture Selection  
-**Decision Status:** ACCEPTED IN PRINCIPLE  
+**Decision Status:** ACCEPTED IN PRINCIPLE — SUPPORTING TEAM RECORD NOT VERIFIED  
 **Implementation Status:** NOT IMPLEMENTED  
-**Decision Date:** 2026-09-22 
+**Decision Date:** [NOT VERIFIED — draft records 2026-09-22; confirm against actual team records]
 **Related ADR:** [ADR-001 v1.1](../../ADR/ADR-001-Communication-v1.1.md)
 
 ## 1. Decision Context
@@ -20,7 +20,7 @@ During architecture analysis, Gemini proposed direct Wi-Fi + MQTT and an alterna
 
 ChatGPT was subsequently used to critically review Gemini's initial technical assumptions. Gemini then produced a revised architecture after receiving a follow-up request.
 
-The team considered the architecture alternatives and communicated its agreement in principle with direct Wi-Fi + MQTT for the initial prototype.
+This draft records that the team considered the architecture alternatives and agreed in principle with direct Wi-Fi + MQTT for the initial prototype. The underlying meeting notes or chat log have not been attached to this evidence file and must be checked before this statement is treated as verified.
 
 ## 2. Confirmed Decision
 
@@ -28,7 +28,7 @@ The team considered the architecture alternatives and communicated its agreement
 
 **Decision:** Use direct Wi-Fi + MQTT as the intended communication architecture for the initial prototype.
 
-**Decision Status:** ACCEPTED IN PRINCIPLE.
+**Decision Status:** ACCEPTED IN PRINCIPLE — PENDING VERIFICATION OF PRIMARY TEAM RECORDS.
 
 **Proposed Communication Flow:**
 
@@ -110,7 +110,7 @@ The team has not yet approved the proposed sensor polling, FSM scheduling, or MQ
 
 ### 5.4 Decision Ownership
 
-The team explicitly confirmed its agreement in principle with direct Wi-Fi + MQTT for the initial prototype.
+This record describes the team's agreement in principle with direct Wi-Fi + MQTT for the initial prototype; the primary evidence for that agreement remains to be verified.
 
 The final decision belongs to the team, not to Gemini or ChatGPT.
 
@@ -169,10 +169,10 @@ AI-generated recommendations are treated as supporting information requiring ind
 
 ## 10. Final Decision Statement
 
-The team has **accepted direct Wi-Fi + MQTT in principle as the communication architecture for the initial UAV environmental monitoring prototype**.
+This draft records direct Wi-Fi + MQTT as **accepted in principle for the initial UAV environmental monitoring prototype**. Supporting team approval details and the decision date remain unverified against primary records.
 
 The decision is provisional with respect to operational performance and may be revisited after implementation and testing.
 
 All other unresolved engineering decisions remain PENDING.
 
-**Record Status:** DECISION DOCUMENTED — SUPPORTING TEAM APPROVAL DETAILS PENDING.
+**Record Status:** DRAFT — SUPPORTING TEAM APPROVAL DETAILS AND DECISION DATE NOT VERIFIED.
