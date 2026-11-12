@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "IoT-UAV payloads",
+  "definitions": {
+    "number_or_null": { "type": ["number", "null"] },
+    "uav_payload": {
+      "type": "object",
+      "required": ["seq", "t1", "h1", "p1", "t2", "h2", "p2", "bat", "vbat", "pwr"],
+      "properties": {
+        "seq":  { "type": "integer", "minimum": 0 },
+        "t1":   { "$ref": "#/definitions/number_or_null" },
+        "h1":   { "$ref": "#/definitions/number_or_null" },
+        "p1":   { "$ref": "#/definitions/number_or_null" },
+        "t2":   { "$ref": "#/definitions/number_or_null" },
+        "h2":   { "$ref": "#/definitions/number_or_null" },
+        "p2":   { "$ref": "#/definitions/number_or_null" },
+        "bat":  { "type": ["integer", "null"], "minimum": 0, "maximum": 100 },
+        "vbat": { "$ref": "#/definitions/number_or_null" },
+        "pwr":  { "enum": ["bat", "usb"] }
+      }
+    },
+    "uav_ack": {
+      "type": "object",
+      "required": ["src", "ack"],
+      "properties": { "src": { "const": "uav" }, "ack": { "type": "string" } }
+    },
+    "gateway_online": {
+      "allOf": [
+        { "$ref": "#/definitions/uav_payload" },
+        {
+          "type": "object",
+          "required": ["status", "t3", "h3", "p3"],
+          "properties": {
+            "status": { "const": "online" },
+            "t3": { "$ref": "#/definitions/number_or_null" },
+            "h3": { "$ref": "#/definitions/number_or_null" },
+            "p3": { "$ref": "#/definitions/number_or_null" }
+          }
+        }
+      ]
+    },
+    "gateway_offline": {
+      "type": "object",
+      "required": ["status", "t3", "h3", "p3"],
+      "properties": {
+        "status": { "const": "offline" },
+        "t3": { "$ref": "#/definitions/number_or_null" },
+        "h3": { "$ref": "#/definitions/number_or_null" },
+        "p3": { "$ref": "#/definitions/number_or_null" }
+      }
+    },
+    "gateway_ack": {
+      "type": "object",
+      "required": ["status", "ack"],
+      "properties": { "status": { "const": "ack" }, "ack": { "type": "string" } }
+    }
+  },
+  "description": "uav_payload / uav_ack: UAV -> Ground (LoRa). gateway_online / gateway_offline / gateway_ack: Ground -> PC (USB)."
+}

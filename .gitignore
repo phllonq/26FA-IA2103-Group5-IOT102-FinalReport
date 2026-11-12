@@ -67,3 +67,14 @@ vcpkg_installed/
 # test output & cache
 Testing/
 .cache/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Runtime data của backend Streamlit (dùng nút Tải CSV hoặc copy vào Datasets/ khi cần nộp)
+uav_data.db
+uav_data.db-wal
+uav_data.db-shm
