@@ -84,5 +84,7 @@ Cáp USB 5 V cắm trực tiếp vào cổng microUSB của board (đồng thờ
 
 ## 3. Lưu ý chung
 
+- Nhiều module ghi nhãn chung "BME/BMP280". Chip BMP280 (mã `0x58`) **không có cảm biến độ ẩm**; firmware vẫn chạy được nhưng độ ẩm là `null`. Muốn có độ ẩm cần BME280 thật (mã `0x60`). Có thể kiểm tra mã chip bằng sketch quét I2C.
+
 - Hai module E32 phải cùng dòng/băng tần và cùng cấu hình (địa chỉ, kênh, tốc độ truyền); giữ mặc định 9600 8N1.
 - Module E32 công suất cao có thể kéo dòng lớn khi phát; cấp nguồn bằng cổng USB laptop có thể gây sụt áp và reset ngẫu nhiên.

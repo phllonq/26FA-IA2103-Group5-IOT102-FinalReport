@@ -5,7 +5,7 @@ UAV (ESP32) --LoRa E32 (9600 8N1, truyền trong suốt)--> Ground (ESP8266) --U
 UAV (ESP32) <--------------------- lệnh <...> / dòng lệnh ---------------- Ground (ESP8266) <-- PC
 ```
 
-Mọi bản tin là **một dòng JSON** kết thúc bằng `\n`. Giá trị không có hoặc cảm biến lỗi là `null` (không bao giờ là 0 giả).
+Mọi bản tin là **một dòng JSON** kết thúc bằng `\n`. Giá trị không có hoặc cảm biến lỗi là `null` (không bao giờ là 0 giả). Nếu module cảm biến thực chất là BMP280 (không có cảm biến độ ẩm), firmware tự nhận chip và các trường độ ẩm `h1`, `h2`, `h3` là `null`.
 
 ## 1. UAV → Ground (LoRa)
 

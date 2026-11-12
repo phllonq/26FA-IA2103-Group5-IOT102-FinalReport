@@ -49,7 +49,7 @@ PC: Streamlit + SQLite  ──lệnh (SPEED_1S/5S, SET_FREQ:n, PING, RESET_UAV)�
 | UAV | ESP32 DevKit V1, 2x BME280 (không vỏ / có vỏ Pagoda, hai bus I2C riêng), LoRa E32, pin LiPo + Mini 360 hạ áp 5 V, cầu phân áp đo pin |
 | Mặt đất | ESP8266 NodeMCU, LoRa E32 (SoftwareSerial), BME280 tham chiếu, nguồn từ cổng USB |
 
-**Phần mềm:** Arduino IDE (core esp32 3.x, esp8266), thư viện Adafruit BME280, ArduinoJson 7; Python 3 với Streamlit, pyserial, pandas; SQLite.
+**Phần mềm:** Arduino IDE (core esp32 3.x, esp8266), thư viện Adafruit BME280, Adafruit BMP280 (dự phòng khi module thực chất là BMP280), ArduinoJson 7; Python 3 với Streamlit, pyserial, pandas; SQLite.
 
 ### Build & Run
 

@@ -1,6 +1,7 @@
 #include <Wire.h>
 #include <Adafruit_Sensor.h>
 #include <Adafruit_BME280.h>
+#include <Adafruit_BMP280.h>   // dùng khi module thực chất là BMP280
 #include <ArduinoJson.h>        // ArduinoJson v7
 #include <esp_task_wdt.h>
 
@@ -40,11 +41,83 @@ uint32_t seqNo = 0;
 char cmdBuf[CMD_BUF_SIZE];
 uint8_t cmdLen = 0;
 
+// ---------------- CẢM BIẾN MÔI TRƯỜNG: tự nhận BME280 / BMP280 ----------------
+// Đọc mã chip (thanh ghi 0xD0): 0x60 = BME280 (có độ ẩm), 0x56/0x57/0x58 = BMP280 (KHÔNG có độ ẩm -> h = NAN).
+// Khai báo trước mọi hàm của sketch (Arduino tự sinh prototype hàm lên đầu file).
+class EnvSensor {
+ public:
+  enum Type : uint8_t { NONE = 0, BME = 1, BMP = 2 };
+
+  explicit EnvSensor(TwoWire &bus) : _bus(&bus), _bmp(&bus) {}
+
+  bool ok() const { return _type != NONE; }
+  bool hasHumidity() const { return _type == BME; }
+  const char *name() const { return _type == BME ? "BME280" : (_type == BMP ? "BMP280 (khong co do am)" : "KHONG THAY"); }
+
+  bool begin() {
+    _type = NONE;
+    const uint8_t addrs[2] = {0x76, 0x77};
+    for (uint8_t i = 0; i < 2; i++) {
+      uint8_t a = addrs[i];
+      uint8_t id = chipId(a);
+      if (id == 0x60) {
+        if (_bme.begin(a, _bus)) {
+          _bme.setSampling(Adafruit_BME280::MODE_NORMAL, Adafruit_BME280::SAMPLING_X2,
+                           Adafruit_BME280::SAMPLING_X16, Adafruit_BME280::SAMPLING_X2,
+                           Adafruit_BME280::FILTER_X4, Adafruit_BME280::STANDBY_MS_500);
+          _type = BME;
+          return true;
+        }
+      } else if (id == 0x56 || id == 0x57 || id == 0x58) {
+        if (_bmp.begin(a, id)) {
+          _bmp.setSampling(Adafruit_BMP280::MODE_NORMAL, Adafruit_BMP280::SAMPLING_X2,
+                           Adafruit_BMP280::SAMPLING_X16, Adafruit_BMP280::FILTER_X4,
+                           Adafruit_BMP280::STANDBY_MS_500);
+          _type = BMP;
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  // t: °C, h: % (NAN nếu BMP280), p: hPa. Trả về false nếu đọc lỗi (tự về NONE để begin() lại ở chu kỳ sau).
+  bool read(float &t, float &h, float &p) {
+    t = h = p = NAN;
+    if (_type == NONE) return false;
+    float tt, hh = NAN, pp;
+    if (_type == BME) {
+      tt = _bme.readTemperature();
+      hh = _bme.readHumidity();
+      pp = _bme.readPressure() / 100.0F;
+    } else {
+      tt = _bmp.readTemperature();
+      pp = _bmp.readPressure() / 100.0F;
+    }
+    bool bad = isnan(tt) || isnan(pp) || pp < 300.0F || pp > 1100.0F || (_type == BME && isnan(hh));
+    if (bad) { _type = NONE; return false; }
+    t = tt; h = hh; p = pp;
+    return true;
+  }
+
+ private:
+  uint8_t chipId(uint8_t a) {
+    _bus->beginTransmission(a);
+    _bus->write(0xD0);
+    if (_bus->endTransmission(false) != 0) return 0;
+    if (_bus->requestFrom((int)a, 1) != 1) return 0;
+    return (uint8_t)_bus->read();
+  }
+
+  TwoWire *_bus;
+  Adafruit_BME280 _bme;
+  Adafruit_BMP280 _bmp;
+  Type _type = NONE;
+};
+
 // Cảm biến
-Adafruit_BME280 bme_unshielded;
-Adafruit_BME280 bme_shielded;
-bool bme1_ok = false;
-bool bme2_ok = false;
+EnvSensor bme_unshielded(Wire);    // bus 0
+EnvSensor bme_shielded(Wire1);      // bus 1
 
 // Khai báo trước
 void sendSensorData();
@@ -52,8 +125,6 @@ void checkIncomingCommands();
 void executeCommand(char *cmd);
 void sendAck(const char *what);
 float round2(float value);
-bool initBME(Adafruit_BME280 &bme, TwoWire &bus);
-bool readBME(Adafruit_BME280 &bme, bool &okFlag, float &t, float &h, float &p);
 float readBatteryVoltage();
 int batteryPercent(float vPack);
 
@@ -84,11 +155,11 @@ void setup() {
   Wire1.begin(I2C1_SDA, I2C1_SCL);
   Wire1.setTimeOut(50);
 
-  bme1_ok = initBME(bme_unshielded, Wire);
+  bme_unshielded.begin();
   esp_task_wdt_reset();
-  bme2_ok = initBME(bme_shielded, Wire1);
-  Serial.println(bme1_ok ? "BME280 Unshielded OK." : "Loi: Khong tim thay BME280 Unshielded!");
-  Serial.println(bme2_ok ? "BME280 Shielded OK."   : "Loi: Khong tim thay BME280 Shielded!");
+  bme_shielded.begin();
+  Serial.printf("Cam bien #1 (Unshielded): %s\n", bme_unshielded.name());
+  Serial.printf("Cam bien #2 (Shielded)  : %s\n", bme_shielded.name());
 }
 
 void loop() {
@@ -100,26 +171,6 @@ void loop() {
     lastReadTime = millis();
     sendSensorData();
   }
-}
-
-// ---------------- CẢM BIẾN ----------------
-bool initBME(Adafruit_BME280 &bme, TwoWire &bus) {
-  return bme.begin(0x76, &bus) || bme.begin(0x77, &bus);
-}
-
-// Trả về true nếu đọc hợp lệ; nếu không, đánh dấu lỗi để thử init lại ở chu kỳ sau
-bool readBME(Adafruit_BME280 &bme, bool &okFlag, float &t, float &h, float &p) {
-  t = h = p = NAN;
-  if (!okFlag) return false;
-  float tt = bme.readTemperature();
-  float hh = bme.readHumidity();
-  float pp = bme.readPressure() / 100.0F;
-  if (isnan(tt) || isnan(hh) || isnan(pp) || pp < 300.0F || pp > 1100.0F) {
-    okFlag = false;
-    return false;
-  }
-  t = tt; h = hh; p = pp;
-  return true;
 }
 
 // ---------------- PIN LiPo (3S) ----------------
@@ -153,12 +204,12 @@ int batteryPercent(float vPack) {
 // ---------------- ĐỌC VÀ GỬI DỮ LIỆU LORA ----------------
 void sendSensorData() {
   // Thử cứu cảm biến nếu đang lỗi
-  if (!bme1_ok) bme1_ok = initBME(bme_unshielded, Wire);
-  if (!bme2_ok) bme2_ok = initBME(bme_shielded, Wire1);
+  if (!bme_unshielded.ok()) bme_unshielded.begin();
+  if (!bme_shielded.ok())   bme_shielded.begin();
 
   float t1, h1, p1, t2, h2, p2;
-  readBME(bme_unshielded, bme1_ok, t1, h1, p1);
-  readBME(bme_shielded,   bme2_ok, t2, h2, p2);
+  bme_unshielded.read(t1, h1, p1);   // BMP280: h1 = NAN -> null
+  bme_shielded.read(t2, h2, p2);
 
   float vBattery = readBatteryVoltage();
   int batPercent = batteryPercent(vBattery);
