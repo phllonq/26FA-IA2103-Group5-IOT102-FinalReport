@@ -1,21 +1,22 @@
-DROP TABLE IF EXISTS uav_telemetry;
+-- Schema SQLite của backend serial (gateway.py tự tạo khi chạy lần đầu).
+-- readings: mỗi gói online/offline từ trạm mặt đất; events: kết nối, mất/có lại tín hiệu, lệnh, ack.
+-- Giá trị cảm biến lỗi/thiếu được lưu NULL (không phải 0).
 
-CREATE TABLE uav_telemetry (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    packet_id INTEGER NOT NULL,            -- Số đếm gói tin tăng dần (tính PDR, Packet Loss cho RQ2)
-    t_generated BIGINT NOT NULL,           -- Epoch ms khi ESP32 đóng gói
-    t_received BIGINT NOT NULL,            -- Epoch ms khi Backend nhận được gói
-    aoi_ms BIGINT,                         -- Age of Information = t_received - t_generated
-    temperature REAL,                      -- Nhiệt độ thô từ BME280 (°C)
-    humidity REAL,                         -- Độ ẩm tương đối thô từ BME280 (%)
-    rssi INTEGER,                          -- Cường độ tín hiệu Wi-Fi (dBm)
-    state TEXT,                            -- Trạng thái FSM: GOOD, HOLD, DEGRADED, EVENT
-    event INTEGER DEFAULT 0,               -- Cờ kích hoạt đột biến (0: False, 1: True)
-    latitude REAL,                         -- GPS Lat
-    longitude REAL,                        -- GPS Lon
-    altitude REAL,                         -- Độ cao (m)
-    flight_id TEXT DEFAULT 'FLIGHT_01'     -- Mã đợt bay thử nghiệm
+CREATE TABLE IF NOT EXISTS readings (
+    id        INTEGER PRIMARY KEY AUTOINCREMENT,
+    ts        TEXT NOT NULL,
+    ts_epoch  REAL NOT NULL,
+    status    TEXT NOT NULL,
+    seq INTEGER, t1 REAL, h1 REAL, p1 REAL,
+    t2 REAL, h2 REAL, p2 REAL,
+    bat REAL, vbat REAL, pwr TEXT,
+    t3 REAL, h3 REAL, p3 REAL
 );
-
-CREATE INDEX IF NOT EXISTS idx_t_generated ON uav_telemetry(t_generated);
-CREATE INDEX IF NOT EXISTS idx_packet_id ON uav_telemetry(packet_id);
+CREATE INDEX IF NOT EXISTS idx_readings_epoch ON readings(ts_epoch);
+CREATE TABLE IF NOT EXISTS events (
+    id       INTEGER PRIMARY KEY AUTOINCREMENT,
+    ts       TEXT NOT NULL,
+    ts_epoch REAL NOT NULL,
+    kind     TEXT NOT NULL,
+    detail   TEXT
+);
