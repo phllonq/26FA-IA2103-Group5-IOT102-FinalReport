@@ -1,8 +1,3 @@
-"""
-app.py - Giao diện Streamlit giám sát môi trường IoT-UAV (Apple Liquid Glass Edition).
-Chạy:  python -m streamlit run app.py
-Yêu cầu: streamlit>=1.37, pyserial, pandas, altair
-"""
 import html
 import sqlite3
 import time
