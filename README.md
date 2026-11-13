@@ -8,7 +8,7 @@
 [![Dashboard](https://img.shields.io/badge/UI-Streamlit%20Liquid%20Glass-F97316)](#)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-**Trường:** Đại học FPT TP.HCM (FPT University HCMC)  
+**Trường:** Đại học FPT TP.HCM   
 **Môn học:** IOT102 — Internet of Things (Học kỳ Fall 2026)  
 **Lớp / Nhóm:** IA2103 — Group 5  
 **Giảng viên hướng dẫn:** TS. Trần Công Đời (Dr. Tran Cong Doi)  
