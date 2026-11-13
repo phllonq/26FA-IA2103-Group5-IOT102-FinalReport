@@ -15,9 +15,9 @@
 
 | Thành viên | MSSV / Vai trò | Phụ trách chính |
 |---|---|---|
-| **Trần Phi Long** | `SE201868` — *Team Leader* | Kiến trúc hệ thống, Backend `gateway.py` (SQLite WAL), Streamlit Dashboard  |
-| **Nguyễn Gia Huy** | *Firmware Developer* | Lập trình Firmware ESP32 (Trạm UAV) & ESP8266 (Trạm Mặt Đất), giao thức LoRa E32 2 chiều & Watchdog |
-| **Nguyễn Bảo Phúc** | *Hardware & CAD Lead* | Hàn mạch phần cứng, cân chỉnh nguồn Buck Mini 360, sơ đồ nguyên lý & thiết kế in 3D vỏ chắn Pagoda Shield |
+| **Trần Phi Long** | `SE201868` — *Team Leader* | Hàn mạch phần cứng, cân chỉnh nguồn Buck Mini 360, sơ đồ nguyên lý & thiết kế in 3D vỏ chắn Pagoda Shield  |
+| **Nguyễn Bảo Phúc** | *Firmware Developer* | Lập trình Firmware ESP32 (Trạm UAV) & ESP8266 (Trạm Mặt Đất), giao thức LoRa E32 2 chiều & Watchdog |
+| **Nguyễn Gia Huy** | *Hardware & CAD Lead* | Kiến trúc hệ thống, Backend `gateway.py` (SQLite WAL), Streamlit Dashboard |
 | **Nguyễn Thanh Nhân** | *Data Analytics & RBL* | Hiệu chuẩn cảm biến, thu thập log thực nghiệm, phân tích định lượng RQ1/RQ2 (MAE, RMSE, PDR, AoI) |
 
 ---
