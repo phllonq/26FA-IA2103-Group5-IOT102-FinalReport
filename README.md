@@ -184,7 +184,7 @@ Lộ trình triển khai dự án trong 11 tuần theo chuẩn PBL + RBL của m
 
 Nhóm tuân thủ nghiêm ngặt quy định về minh bạch học thuật và kiểm chứng kết quả AI (**AI Output Verification & Validation**):
 - **AI Usage Declaration:** Được đính kèm đầy đủ ở phần cuối của báo cáo `Final Report` trong thư mục `Documents/`.
-- **AI Audit Log:** Lưu trữ tại file riêng trong thư mục [`AI_Audit_Log/`](AI_Audit_Log/), ghi nhận chi tiết chuỗi *AI Output $\rightarrow$ Verification/Validation $\rightarrow$ Student Decision $\rightarrow$ Evidence/Test* cho các quyết định kỹ thuật trọng tâm của dự án:
+- **AI Audit Log:** Lưu trữ tại file riêng trong thư mục [`AI_Audit_Log/`](AI_Audit_Log/), ghi nhận chi tiết chuỗi *AI Output → Verification/Validation → Student Decision → Evidence/Test* cho các quyết định kỹ thuật trọng tâm của dự án:
   1. **Lựa chọn giao thức & Tối ưu chân LoRa E32:** Thay thế Wi-Fi bằng LoRa E32 433 MHz để đảm bảo tầm xa; nối cứng `M0 = M1 = GND` (Normal Mode) và xử lý đệm phần mềm thay vì tốn thêm 3 chân GPIO cho `M0, M1, AUX`.
   2. **Thiết kế nguồn 5.0V & Dual Hardware I2C:** Sử dụng mạch hạ áp DC-DC Mini 360 (5.0V) thay vì cấp thẳng 12.6V của pin LiPo 3S vào chân VIN tránh cháy module LoRa; tách 2 cảm biến lên `Wire` (GPIO 21/22) và `Wire1` (GPIO 18/19) để triệt tiêu xung đột địa chỉ I2C.
   3. **Khắc phục lỗi biên dịch Watchdog ESP32 Core 3.x & Nhận diện Silicon BMP280 (`0x58`):** Phát hiện code khởi tạo Watchdog cũ (`esp_task_wdt_init(15, true)`) của AI bị lỗi trên ESP32 Core 3.3.12 và cập nhật sang cấu trúc `esp_task_wdt_config_t`; đồng thời viết trình quét thanh ghi `0xD0` phát hiện lô mạch thực tế dùng chip `BMP280 (0x58)` để xử lý trả về `null` cho kênh độ ẩm.
