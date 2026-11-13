@@ -238,7 +238,9 @@ void sendSensorData() {
   String payload;
   serializeJson(doc, payload);
 
+  Serial.println("[UAV TEST] Sending test packet to Ground...");
   Serial2.println(payload);               // phát qua LoRa
+  Serial.println("[UAV TEST] Test packet sent.");
   Serial.print("UAV TX: ");
   Serial.println(payload);
 }
