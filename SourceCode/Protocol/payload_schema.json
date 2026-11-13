@@ -1,59 +1,152 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "IoT-UAV payloads",
-  "definitions": {
-    "number_or_null": { "type": ["number", "null"] },
-    "uav_payload": {
+  "$id": "https://github.com/phllonq/26FA-IA2103-Group5-IOT102-FinalReport/blob/main/SourceCode/dashboard/payload_schema.json",
+  "title": "IoT-UAV Environmental Telemetry & Control Schema",
+  "description": "JSON Schema cho luồng dữ liệu từ Trạm Mặt Đất (ESP8266) gửi lên PC (USB Serial 115200 bps) và gói tin LoRa từ Trạm Bay UAV (ESP32).",
+  "oneOf": [
+    { "$ref": "#/$defs/ground_online_packet" },
+    { "$ref": "#/$defs/ground_offline_packet" },
+    { "$ref": "#/$defs/ground_ack_packet" }
+  ],
+  "$defs": {
+    "nullable_number": {
+      "type": ["number", "null"]
+    },
+    "nullable_temperature": {
+      "type": ["number", "null"],
+      "minimum": -40.0,
+      "maximum": 85.0,
+      "description": "Nhiệt độ môi trường (°C); null nếu cảm biến lỗi hoặc chưa khởi tạo."
+    },
+    "nullable_humidity": {
+      "type": ["number", "null"],
+      "minimum": 0.0,
+      "maximum": 100.0,
+      "description": "Độ ẩm tương đối (%); luôn là null nếu phần cứng là BMP280 (chip ID 0x58), có giá trị nếu là BME280 (0x60)."
+    },
+    "nullable_pressure": {
+      "type": ["number", "null"],
+      "minimum": 300.0,
+      "maximum": 1100.0,
+      "description": "Áp suất khí quyển (hPa); null nếu cảm biến lỗi hoặc ngoài ngưỡng vật lý [300, 1100]."
+    },
+    "uav_lora_telemetry": {
       "type": "object",
-      "required": ["seq", "t1", "h1", "p1", "t2", "h2", "p2", "bat", "vbat", "pwr"],
+      "description": "Gói dữ liệu thô do ESP32 (UAV) phát qua LoRa E32 (9600 8N1).",
       "properties": {
-        "seq":  { "type": "integer", "minimum": 0 },
-        "t1":   { "$ref": "#/definitions/number_or_null" },
-        "h1":   { "$ref": "#/definitions/number_or_null" },
-        "p1":   { "$ref": "#/definitions/number_or_null" },
-        "t2":   { "$ref": "#/definitions/number_or_null" },
-        "h2":   { "$ref": "#/definitions/number_or_null" },
-        "p2":   { "$ref": "#/definitions/number_or_null" },
-        "bat":  { "type": ["integer", "null"], "minimum": 0, "maximum": 100 },
-        "vbat": { "$ref": "#/definitions/number_or_null" },
-        "pwr":  { "enum": ["bat", "usb"] }
-      }
-    },
-    "uav_ack": {
-      "type": "object",
-      "required": ["src", "ack"],
-      "properties": { "src": { "const": "uav" }, "ack": { "type": "string" } }
-    },
-    "gateway_online": {
-      "allOf": [
-        { "$ref": "#/definitions/uav_payload" },
-        {
-          "type": "object",
-          "required": ["status", "t3", "h3", "p3"],
-          "properties": {
-            "status": { "const": "online" },
-            "t3": { "$ref": "#/definitions/number_or_null" },
-            "h3": { "$ref": "#/definitions/number_or_null" },
-            "p3": { "$ref": "#/definitions/number_or_null" }
-          }
+        "seq": {
+          "type": ["integer", "null"],
+          "minimum": 0,
+          "description": "Số thứ tự gói tin tăng dần, dùng để tính Packet Delivery Ratio (PDR)."
+        },
+        "t1": { "$ref": "#/$defs/nullable_temperature" },
+        "h1": { "$ref": "#/$defs/nullable_humidity" },
+        "p1": { "$ref": "#/$defs/nullable_pressure" },
+        "t2": { "$ref": "#/$defs/nullable_temperature" },
+        "h2": { "$ref": "#/$defs/nullable_humidity" },
+        "p2": { "$ref": "#/$defs/nullable_pressure" },
+        "bat": {
+          "type": ["integer", "null"],
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Phần trăm dung lượng pin LiPo 3S (0–100%); null khi cấp nguồn USB."
+        },
+        "vbat": {
+          "type": ["number", "null"],
+          "minimum": 0.0,
+          "maximum": 20.0,
+          "description": "Điện áp pack pin LiPo (V); null khi cấp nguồn USB (vbat < 6.0V)."
+        },
+        "pwr": {
+          "type": ["string", "null"],
+          "enum": ["bat", "usb", null],
+          "description": "Chế độ cấp nguồn hiện tại của UAV: 'bat' (pin LiPo) hoặc 'usb' (nguồn trực tiếp)."
         }
-      ]
+      },
+      "required": ["seq", "t1", "h1", "p1", "t2", "h2", "p2", "bat", "vbat", "pwr"],
+      "additionalProperties": false
     },
-    "gateway_offline": {
+    "ground_online_packet": {
       "type": "object",
-      "required": ["status", "t3", "h3", "p3"],
+      "description": "Gói dữ liệu hợp lệ ESP8266 gộp từ UAV và cảm biến tham chiếu mặt đất gửi lên PC.",
       "properties": {
-        "status": { "const": "offline" },
-        "t3": { "$ref": "#/definitions/number_or_null" },
-        "h3": { "$ref": "#/definitions/number_or_null" },
-        "p3": { "$ref": "#/definitions/number_or_null" }
-      }
+        "status": {
+          "const": "online"
+        },
+        "seq": {
+          "type": ["integer", "null"],
+          "minimum": 0
+        },
+        "t1": { "$ref": "#/$defs/nullable_temperature" },
+        "h1": { "$ref": "#/$defs/nullable_humidity" },
+        "p1": { "$ref": "#/$defs/nullable_pressure" },
+        "t2": { "$ref": "#/$defs/nullable_temperature" },
+        "h2": { "$ref": "#/$defs/nullable_humidity" },
+        "p2": { "$ref": "#/$defs/nullable_pressure" },
+        "bat": {
+          "type": ["integer", "null"],
+          "minimum": 0,
+          "maximum": 100
+        },
+        "vbat": {
+          "type": ["number", "null"],
+          "minimum": 0.0,
+          "maximum": 20.0
+        },
+        "pwr": {
+          "type": ["string", "null"],
+          "enum": ["bat", "usb", null]
+        },
+        "t3": { "$ref": "#/$defs/nullable_temperature" },
+        "h3": { "$ref": "#/$defs/nullable_humidity" },
+        "p3": { "$ref": "#/$defs/nullable_pressure" }
+      },
+      "required": [
+        "status",
+        "seq",
+        "t1", "h1", "p1",
+        "t2", "h2", "p2",
+        "bat", "vbat", "pwr",
+        "t3", "h3", "p3"
+      ],
+      "additionalProperties": false
     },
-    "gateway_ack": {
+    "ground_offline_packet": {
       "type": "object",
+      "description": "Gói cảnh báo mất kết nối LoRa (quá 12 giây không nhận gói từ UAV, lặp lại mỗi 5 giây).",
+      "properties": {
+        "status": {
+          "const": "offline"
+        },
+        "t3": { "$ref": "#/$defs/nullable_temperature" },
+        "h3": { "$ref": "#/$defs/nullable_humidity" },
+        "p3": { "$ref": "#/$defs/nullable_pressure" }
+      },
+      "required": ["status", "t3", "h3", "p3"],
+      "additionalProperties": false
+    },
+    "ground_ack_packet": {
+      "type": "object",
+      "description": "Gói xác nhận phản hồi lệnh điều khiển 2 chiều từ UAV.",
+      "properties": {
+        "status": {
+          "const": "ack"
+        },
+        "ack": {
+          "type": "string",
+          "enum": [
+            "SPEED_1S",
+            "SPEED_5S",
+            "SET_FREQ",
+            "SET_FREQ_INVALID",
+            "PING",
+            "RESET",
+            "UNKNOWN_CMD"
+          ]
+        }
+      },
       "required": ["status", "ack"],
-      "properties": { "status": { "const": "ack" }, "ack": { "type": "string" } }
+      "additionalProperties": false
     }
-  },
-  "description": "uav_payload / uav_ack: UAV -> Ground (LoRa). gateway_online / gateway_offline / gateway_ack: Ground -> PC (USB)."
+  }
 }
