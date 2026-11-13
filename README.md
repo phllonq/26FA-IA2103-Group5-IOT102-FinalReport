@@ -11,7 +11,7 @@
 **Trường:** Đại học FPT TP.HCM (FPT University HCMC)  
 **Môn học:** IOT102 — Internet of Things (Học kỳ Fall 2026)  
 **Lớp / Nhóm:** IA2103 — Group 5  
-**Giảng viên hướng dẫn:** TS. Trần Công Đới (Dr. Tran Cong Doi)  
+**Giảng viên hướng dẫn:** TS. Trần Công Đời (Dr. Tran Cong Doi)  
 
 | Thành viên | MSSV / Vai trò | Phụ trách chính |
 |---|---|---|
