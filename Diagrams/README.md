@@ -1,50 +1,54 @@
 # System Architecture, Flowchart & Data Flow Diagrams
 
 Thư mục này chứa toàn bộ sơ đồ kỹ thuật chuẩn hóa của hệ thống **Adaptive IoT-UAV Environmental Monitoring System (Nhóm 5 — IOT102)**:
-1. **Hardware Block Diagram** (`Block_Diagram.png`)
-2. **System Algorithm Flowchart — Chuẩn ANSI X3.5 / ISO 5807** (`Flowchart_FSM.png`)
-3. **End-to-End Telemetry & Command Data Flow** (`System_DataFlow.png`)
+1. **Hardware Block Diagram** (*Sơ đồ khối phần cứng*)
+2. **System Algorithm Flowchart — Chuẩn ANSI X3.5 / ISO 5807** (*Lưu đồ thuật toán hệ thống*)
+3. **End-to-End Telemetry & Command Data Flow** (*Sơ đồ luồng dữ liệu & điều khiển 2 chiều*)
 
 ---
 
 ## 1. Hardware Block Diagram (Sơ Đồ Khối Phần Cứng)
 
 > **Quy ước đường dây & mũi tên tín hiệu:**
-> - **Nét liền 1 chiều (`-->`):** Tín hiệu dữ liệu 1 chiều (`ADC`, `UART_TX`, `UART_RX`) và đường cấp nguồn (`+12V`, `+5.0V`, `+3.3V`).
-> - **Nét liền 2 chiều (`<-->` / `<==>`):** Bus dữ liệu 2 chiều (`I2C_SDA`, `USB_UART`, `SQL_IO`, `RF Data`).
-> - **Nét đứt (`-.->` / `<-.->`):** Tín hiệu xung nhịp (`I2C_SCL` từ MCU ra cảm biến) và tín hiệu điều khiển (`CTRL_M0/M1`, `CTRL_CMD`, `ACK`).
-
-![Hardware Block Diagram](./Block_Diagram.png)
+> - **Nét liền 1 chiều (`-->`):** Đường cấp nguồn (`+12V DC`, `+5.0V VCC`, `+3.3V VDD`) và tín hiệu tương tự 1 chiều (`ADC1_CH6`).
+> - **Nét liền 2 chiều (`<-->` / `<==>`):** Bus dữ liệu số 2 chiều (`I2C_SDA`, `UART_TX/RX`, `USB_UART`, `SQL_IO`, `RF Data`).
+> - **Nét đứt (`-.->` / `<-.->`):** Tín hiệu xung nhịp (`I2C_SCL`) và tín hiệu điều khiển trạng thái (`CTRL_M0/M1`, `CTRL_CMD`, `ACK`).
 
 ```mermaid
 flowchart LR
     subgraph UAV["PHÂN HỆ 1: TRẠM THU THẬP TRÊN KHÔNG (AIRBORNE NODE)"]
         direction LR
         P_LIPO["Khối Nguồn Pin LiPo<br/>(+11.1V..12.6V, GND)"] -->|"+12V DC"| P_BUCK["Khối Hạ Áp DC-DC<br/>(Ổn áp +5.0V VCC, GND)"]
-        S1["Khối Cảm Biến #1<br/>Nhiệt độ & Áp suất (Trần)"] <-->|"I2C0_SDA (Data)"| MCU_UAV["Khối Vi Điều Khiển<br/>Trung Tâm UAV (32-bit)"]
-        MCU_UAV -.->|"I2C0_SCL (Clock)"| S1
-        S2["Khối Cảm Biến #2<br/>Nhiệt độ & Áp suất (Pagoda)"] <-->|"I2C1_SDA (Data)"| MCU_UAV
-        MCU_UAV -.->|"I2C1_SCL (Clock)"| S2
-        S_BAT["Khối Đo Mức Pin<br/>(Phân áp Analog)"] -->|"ADC1_CH6 (Data)"| MCU_UAV
-        P_BUCK -->|"+5.0V VIN, GND"| MCU_UAV
-        P_BUCK -->|"+5.0V VCC, GND"| RF_UAV["Khối Thu Phát<br/>Vô Tuyến RF (LoRa)"]
-        MCU_UAV -->|"UART2_TX (Data)"| RF_UAV
-        RF_UAV -->|"UART2_RX (Data)"| MCU_UAV
-        MCU_UAV -.->|"CTRL_M0/M1 (Mode)"| RF_UAV
+        P_BUCK -->|"+5.0V VIN, GND"| MCU_UAV["Khối Vi Điều Khiển<br/>Trung Tâm UAV<br/>(MCU 32-bit)"]
+        P_BUCK -->|"+5.0V VCC, GND"| RF_UAV["Khối Thu Phát<br/>Vô Tuyến RF<br/>(LoRa 433MHz)"]
+
+        S1["Khối Cảm Biến #1<br/>Nhiệt độ & Áp suất (Trần)<br/>Nguồn: +3.3V VDD, GND"] <-->|"I2C0_SDA (8-bit Data)"| MCU_UAV
+        S1 -.->|"I2C0_SCL (100kHz Clock)"| MCU_UAV
+
+        S2["Khối Cảm Biến #2<br/>Nhiệt độ & Áp suất (Chắn gió)<br/>Nguồn: +3.3V VDD, GND"] <-->|"I2C1_SDA (8-bit Data)"| MCU_UAV
+        S2 -.->|"I2C1_SCL (100kHz Clock)"| MCU_UAV
+
+        S_BAT["Khối Đo Mức Pin<br/>Phân áp Tương tự (Analog)<br/>Đầu vào: V_BAT (+12V)"] -->|"ADC1_CH6 (12-bit Data)"| MCU_UAV
+
+        MCU_UAV <-->|"UART2_TX/RX (8-bit Data)"| RF_UAV
+        MCU_UAV -.->|"CTRL_M0/M1 (Mode Control)"| RF_UAV
     end
 
     subgraph GND["PHÂN HỆ 2: TRẠM MẶT ĐẤT & KHỐI HIỂN THỊ TRUNG TÂM (GROUND STATION)"]
         direction LR
-        P_USB["Khối Nguồn Cổng USB<br/>(+5.0V VBUS, +3.3V, GND)"] -->|"+5.0V VCC, GND"| RF_GND["Khối Thu Phát<br/>Vô Tuyến RF (LoRa)"]
-        P_USB -->|"+5.0V / +3.3V, GND"| MCU_GND["Khối Vi Điều Khiển<br/>Trạm Mặt Đất (Gateway)"]
-        RF_GND -->|"UART_RX (Data)"| MCU_GND
-        MCU_GND -->|"UART_TX (Data)"| RF_GND
-        MCU_GND -.->|"CTRL_M0/M1 (Mode)"| RF_GND
-        S3["Khối Cảm Biến #3 (Đất)<br/>Tham chiếu Nhiệt độ & Áp suất"] <-->|"I2C_SDA (Data)"| MCU_GND
-        MCU_GND -.->|"I2C_SCL (Clock)"| S3
-        MCU_GND <-->|"USB_UART (Data)"| UI_CTRL["Khối Hiển Thị &<br/>Điều Khiển (Streamlit)"]
-        UI_CTRL -.->|"CTRL_CMD (Control)"| MCU_GND
-        UI_CTRL <-->|"SQL_IO (Data)"| DB_STORE["Khối Lưu Trữ Dữ Liệu<br/>(SQLite WAL)"]
+        P_USB["Khối Nguồn Cổng USB<br/>(+5.0V VBUS, +3.3V, GND)"] -->|"+5.0V VCC, GND"| RF_GND["Khối Thu Phát<br/>Vô Tuyến RF<br/>(LoRa 433MHz)"]
+        P_USB -->|"+5.0V / +3.3V, GND"| MCU_GND["Khối Vi Điều Khiển<br/>Trạm Mặt Đất<br/>(Gateway MCU)"]
+
+        RF_GND <-->|"UART_RX/TX (8-bit Data)"| MCU_GND
+        RF_GND <-.->|"CTRL_M0/M1 (Mode Control)"| MCU_GND
+
+        S3["Khối Cảm Biến #3 (Đất)<br/>Tham chiếu Nhiệt độ & Áp suất<br/>Nguồn: +3.3V VDD, GND"] <-->|"I2C_SDA (8-bit Data)"| MCU_GND
+        S3 -.->|"I2C_SCL (100kHz Clock)"| MCU_GND
+
+        MCU_GND <-->|"USB_UART (115200 bps Data)"| UI_CTRL["Khối Hiển Thị &<br/>Điều Khiển Trung Tâm<br/>(Streamlit Dashboard)"]
+        MCU_GND <-.->|"CTRL_CMD Bus (Control)"| UI_CTRL
+
+        UI_CTRL <-->|"SQL_IO Bus (WAL Data)"| DB_STORE["Khối Lưu Trữ Dữ Liệu<br/>(SQLite Database WAL)"]
     end
 
     RF_UAV <==>|"Kênh Dữ Liệu RF (433MHz Half-Duplex)"| RF_GND
@@ -59,17 +63,16 @@ flowchart LR
 > - **Hình bầu dục `([...])`:** Điểm Bắt đầu (`Start`) và Kết thúc (`End`).
 > - **Hình chữ nhật `[...]`:** Bước xử lý nội bộ (`Process`).
 > - **Hình bình hành `[/.../]`:** Thao tác Nhập / Xuất dữ liệu (`Input / Output`).
-> - **Hình thoi `{...}`:** Điểm quyết định rẽ nhánh (`Decision: Đúng / Sai`).
-> - **Đường vòng lặp:** Tất cả các nhánh rẽ tiến về cuối chu kỳ và chỉ sử dụng **1 đường vòng lặp duy nhất** quay về đầu vòng quét.
-
-![System Algorithm Flowchart](./Flowchart_FSM.png)
+> - **Hình thoi `{...}`:** Điểm kiểm tra điều kiện rẽ nhánh (`Decision: Đúng / Sai`).
+> - **Hình tròn nhỏ `(( ))`:** Điểm nối vòng lặp trong trang (`On-Page Connector`).
 
 ### 2.1. Lưu Đồ Con A: Thuật Toán Trạm Bay UAV (ESP32 Firmware)
 
 ```mermaid
 flowchart TD
     A1(["Bắt đầu (Start)"]) --> A2["Khởi tạo ngoại vi & WDT"]
-    A2 --> A3["Reset bộ đếm Watchdog"]
+    A2 --> A_LOOP(( ))
+    A_LOOP --> A3["Reset bộ đếm Watchdog"]
     A3 --> A4{"Có lệnh từ UART?"}
 
     A4 -->|"Đúng"| A4_IO[/"Nhận lệnh & gửi ACK"/]
@@ -87,7 +90,7 @@ flowchart TD
     A9 --> A10{"Ngắt nguồn / Dừng?"}
     A5 -->|"Sai (Chưa tới hạn)"| A10
 
-    A10 -->|"Sai (Lặp chu kỳ kế tiếp)"| A3
+    A10 -->|"Sai (Lặp chu kỳ kế tiếp)"| A_LOOP
     A10 -->|"Đúng"| A11(["Kết thúc (End)"])
 ```
 
@@ -96,7 +99,7 @@ flowchart TD
 ```mermaid
 flowchart TD
     B1(["Bắt đầu (Start)"]) --> B2["Khởi tạo Serial, LoRa, I2C"]
-    B2 --> B_LOOP["Bắt đầu chu kỳ quét Gateway"]
+    B2 --> B_LOOP(( ))
     B_LOOP --> B3{"Nhận gói tin LoRa?"}
 
     B3 -->|"Đúng"| B4["Cập nhật mốc Heartbeat"]
@@ -121,7 +124,9 @@ flowchart TD
 
 ## 3. End-to-End Telemetry & Command Data Flow (Luồng Dữ Liệu & Điều Khiển 2 Chiều)
 
-![System Data Flow Diagram](./System_DataFlow.png)
+> **Quy ước mũi tên tuần tự:**
+> - **Mũi tên nét liền (`->>`):** Luồng dữ liệu cảm biến và lưu trữ cơ sở dữ liệu (*Data Bus*).
+> - **Mũi tên nét đứt (`-->>`):** Luồng lệnh điều khiển từ người dùng và gói xác nhận (*Control & ACK*).
 
 ```mermaid
 sequenceDiagram
