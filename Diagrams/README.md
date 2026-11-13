@@ -1,149 +1,557 @@
-# System Architecture, Flowchart & Data Flow Diagrams
+# System Architecture, Hardware Block Diagram, Flowchart & Data Flow
 
-Thư mục này lưu trữ toàn bộ bộ sơ đồ kỹ thuật chuẩn hóa của dự án **Adaptive IoT-UAV Environmental Monitoring System with Downwash-Aware Sensing and Adaptive Communication (Nhóm 5 — Lớp IA2103 — Môn IOT102)**:
+Thư mục này chứa các sơ đồ kỹ thuật mô tả kiến trúc và hoạt động của hệ thống **Adaptive IoT-UAV Environmental Monitoring System (Group 5 — IOT102)**.
 
-| STT | Tên file ảnh | Tiêu chuẩn áp dụng | Nội dung mô tả chính |
-|---|---|---|---|
-| **1** | `Block_Diagram.png` | Hardware Block Diagram Standard | Phân cấp khối chức năng phần cứng, biên nguồn cấp điện, hướng tín hiệu và đặc tả các Bus giao tiếp (`I2C`, `UART`, `ADC`, `LoRa RF`, `USB`, `SQL_IO`). |
-| **2** | `Flowchart_FSM.png` | Chuẩn quốc tế **ANSI X3.5 / ISO 5807** | Lưu đồ thuật toán điều khiển và xử lý ngoại lệ trên Trạm bay UAV (ESP32) và Trạm mặt đất (ESP8266 & Python Gateway). |
-| **3** | `System_DataFlow.png` | End-to-End Pipeline Architecture | Luồng đóng gói bản tin JSON chiều xuống (*Downlink Telemetry*) và luồng lệnh điều khiển / phản hồi 2 chiều (*Uplink Command & ACK*). |
+Các sơ đồ được thiết kế theo nguyên tắc phân cấp chức năng, thống nhất ký hiệu, thể hiện rõ chiều truyền tín hiệu và phân biệt luồng dữ liệu với luồng điều khiển.
 
----
+## Diagram Index
 
-## 1. Hardware Block Diagram (Sơ Đồ Khối Phần Cứng)
-
-<!-- VỊ TRÍ HIỂN THỊ ẢNH 1: Tải file Block_Diagram.png vào thư mục Diagrams/ -->
-![Hardware Block Diagram](./Block_Diagram.png)
-
-### 1.1. Phân cấp cấu trúc khối chức năng (System Hierarchy)
-Hệ thống được chia thành **Biên nguồn cấp điện** ở phía trên và **2 phân hệ chức năng độc lập** nối kết qua kênh vô tuyến LoRa 433 MHz theo chiều từ **Trái sang Phải** (Khối Cảm biến đầu vào → Khối Vi điều khiển → Khối Thu phát Vô tuyến → Trạm Mặt Đất → Khối Hiển thị & Lưu trữ):
-
-1. **Biên Nguồn Cấp Điện (Power Distribution Boundary):**
-   - **Khối Nguồn Pin LiPo (Trạm UAV):** Cung cấp điện áp một chiều `+11.1V..12.6V` (3S LiPo) và đường `GND` chung.
-   - **Khối Hạ Áp DC-DC (Mini 360):** Hạ áp và ổn áp đầu ra chuẩn `+5.0V VCC` để cấp nguồn an toàn cho Vi điều khiển trung tâm UAV (`VIN`) và Khối thu phát vô tuyến LoRa E32 (`VCC`).
-   - **Khối Nguồn Cổng USB (Trạm Mặt Đất):** Cấp nguồn trực tiếp `+5.0V VBUS` từ máy tính cho mạch ESP8266 NodeMCU và module LoRa E32 mặt đất, đồng thời hạ áp xuống `+3.3V VDD` cho cảm biến tham chiếu.
-
-2. **Phân Hệ 1 — Trạm Thu Thập Trên Không (Airborne Node — ESP32 DevKit V1):**
-   - **Khối Cảm Biến #1 (Không vỏ / Unshielded):** Cảm biến BMP280/BME280 gắn lộ thiên để thu thập nhiệt độ (`t1`) và áp suất (`p1`) chịu tác động trực tiếp của luồng gió đập cánh quạt (*rotor downwash*).
-   - **Khối Cảm Biến #2 (Có vỏ chắn gió / Pagoda Shield):** Cảm biến BMP280/BME280 đặt bên trong vỏ chắn bức xạ & luồng khí in 3D để đo nhiệt độ (`t2`) và áp suất (`p2`) đã lọc nhiễu cơ - nhiệt.
-   - **Khối Đo Mức Pin (Analog Voltage Divider):** Mạch cầu phân áp điện trở (`R1 = 100kΩ`, `R2 = 33kΩ`) đưa tín hiệu điện áp tương tự vào bộ biến đổi ADC 12-bit (`GPIO 34`) để tính điện áp `vbat`, dung lượng `bat (%)` và nhận diện chế độ nguồn `pwr` (`"bat"` hoặc `"usb"`).
-   - **Khối Vi Điều Khiển Trung Tâm UAV (ESP32 32-bit MCU):** Vận hành 2 bộ điều khiển phần cứng I2C độc lập (`Wire` và `Wire1`), quản lý bộ đếm Hardware Watchdog (`15s`), kiểm tra ngưỡng vật lý và đóng gói chuỗi JSON.
-   - **Khối Thu Phát Vô Tuyến RF UAV (LoRa E32-433T20D):** Hoạt động ở chế độ truyền trong suốt (*Transparent Mode 0*, `M0 = M1 = GND`), phát gói tin cảm biến và nhận lệnh điều khiển ở tần số `433 MHz`.
-
-3. **Phân Hệ 2 — Trạm Mặt Đất & Khối Hiển Thị Trung Tâm (Ground Station — ESP8266 & PC):**
-   - **Khối Thu Phát Vô Tuyến RF Mặt Đất (LoRa E32-433T20D):** Thu gói tin RF từ UAV và phát lệnh điều khiển từ mặt đất lên UAV.
-   - **Khối Cảm Biến #3 (Tham chiếu Mặt đất / Ground Reference):** Cảm biến BMP280/BME280 đặt tại trạm mặt đất để đo nhiệt độ (`t3`) và áp suất (`p3`) làm mốc đối chứng thực nghiệm.
-   - **Khối Vi Điều Khiển Trạm Mặt Đất (ESP8266 Gateway MCU):** Giải mã gói JSON từ bộ đệm UART 256 byte, ghép thêm dữ liệu cảm biến mặt đất, giám sát thời gian chờ mất sóng (*Heartbeat Timeout 12s*) và đẩy dữ liệu qua USB.
-   - **Khối Hiển Thị & Điều Khiển Trung Tâm (Streamlit Dashboard — `app.py`):** Giao diện điều khiển trung tâm thiết kế theo chuẩn *Apple Liquid Glass*, hiển thị đồ thị thời gian thực, tính toán tự động 4 chỉ số RBL (`PDR`, `AoI`, `MAE`, `RMSE`) và phát lệnh điều khiển.
-   - **Khối Lưu Trữ Dữ Liệu (SQLite Database — `uav_data.db`):** Lưu trữ bền vững chuỗi thời gian vào bảng `readings` và nhật ký hệ thống vào bảng `events` theo cơ chế `WAL (Write-Ahead Logging)`.
-
-### 1.2. Bảng đặc tả tín hiệu và Bus giao tiếp phần cứng
-
-| Tên Bus / Tín hiệu | Ký hiệu đường dây | Chiều truyền | Kết nối phần cứng thực tế | Đặc tả kỹ thuật |
-|---|---|---|---|---|
-| **`I2C0_SDA`** | Nét liền (Data) | 2 chiều (`<-->`) | `BMP280 #1 SDA` ↔ `ESP32 GPIO 21` | Bus dữ liệu I2C số 0 (8-bit, Timeout 50ms) |
-| **`I2C0_SCL`** | Nét đứt (Clock) | 1 chiều (`-.->`) | `ESP32 GPIO 22` → `BMP280 #1 SCL` | Xung nhịp I2C số 0 (100 kHz) |
-| **`I2C1_SDA`** | Nét liền (Data) | 2 chiều (`<-->`) | `BMP280 #2 SDA` ↔ `ESP32 GPIO 18` | Bus dữ liệu I2C số 1 (8-bit, Timeout 50ms) |
-| **`I2C1_SCL`** | Nét đứt (Clock) | 1 chiều (`-.->`) | `ESP32 GPIO 19` → `BMP280 #2 SCL` | Xung nhịp I2C số 1 (100 kHz) |
-| **`ADC1_CH6`** | Nét liền (Analog) | 1 chiều (`-->`) | `Cầu phân áp Pin` → `ESP32 GPIO 34` | Ngõ vào ADC 12-bit (Lấy trung bình 16 mẫu) |
-| **`UART2_TX / RX`** | Nét liền (Data) | 2 chiều (`<-->`) | `ESP32 GPIO 17 (TX2) / 16 (RX2)` ↔ `LoRa RXD / TXD` | Giao tiếp UART phần cứng (9600 bps, 8N1) |
-| **`CTRL_M0/M1`** | Nét đứt (Control) | Cố định mức thấp | `LoRa M0 & M1` → `GND` | Khóa chế độ truyền trong suốt (Normal Mode 0) |
-| **`RF 433MHz Link`** | Nét liền & Nét đứt | Bán song công | `LoRa E32 (UAV)` ↔ `LoRa E32 (Ground)` | Sóng vô tuyến ISM 433 MHz, công suất 100mW |
-| **`UART_RX / TX`** | Nét liền (Data) | 2 chiều (`<-->`) | `ESP8266 D2 (GPIO 4) / D1 (GPIO 5)` ↔ `LoRa TXD / RXD` | Giao tiếp `SoftwareSerial` (9600 bps, Buffer 256B) |
-| **`I2C_SDA (Đất)`** | Nét liền (Data) | 2 chiều (`<-->`) | `BMP280 #3 SDA` ↔ `ESP8266 D5 (GPIO 14)` | Bus dữ liệu I2C trạm mặt đất (8-bit) |
-| **`I2C_SCL (Đất)`** | Nét đứt (Clock) | 1 chiều (`-.->`) | `ESP8266 D6 (GPIO 12)` → `BMP280 #3 SCL` | Xung nhịp I2C trạm mặt đất (100 kHz) |
-| **`USB_UART`** | Nét liền (Data) | 2 chiều (`<-->`) | `ESP8266 microUSB` ↔ `PC (gateway.py)` | Luồng JSON Telemetry & ACK (115200 bps) |
-| **`CTRL_CMD Bus`** | Nét đứt (Control) | 1 chiều (`-.->`) | `Streamlit UI` → `gateway.py` → `ESP8266` | Luồng gửi lệnh điều khiển đã lọc Whitelist |
-| **`SQL_IO Bus`** | Nét liền (Data) | 2 chiều (`<-->`) | `gateway.py` ↔ `uav_data.db` ↔ `app.py` | Truy vấn đọc/ghi đồng thời qua SQLite WAL |
+| No. | Diagram | Description |
+|---|---|---|
+| 01 | Hardware Block Diagram | Kiến trúc phần cứng và kết nối giữa các module |
+| 02 | Firmware Control Flowchart | Thuật toán hoạt động ESP32 và ESP8266 |
+| 03 | End-to-End Data Flow | Luồng Telemetry, Command và ACK |
 
 ---
 
-## 2. System Algorithm Flowchart (Lưu Đồ Thuật Toán — Chuẩn ANSI X3.5 / ISO 5807)
+# 1. Hardware Block Diagram & Hardware Interfacing
 
-<!-- VỊ TRÍ HIỂN THỊ ẢNH 2: Tải file Flowchart_FSM.png vào thư mục Diagrams/ -->
-![System Algorithm Flowchart](./Flowchart_FSM.png)
+**Mục đích:** Mô tả kiến trúc phần cứng tổng thể, phân cấp các module chức năng và giao tiếp giữa các thành phần.
 
-### 2.1. Quy ước ký hiệu hình học chuẩn quốc tế ANSI X3.5 / ISO 5807
-- **Hình bầu dục (Oval — `Bắt đầu / Kết thúc`):** Biểu diễn điểm khởi đầu (`Start`) và điểm kết thúc (`End`) của chương trình.
-- **Hình chữ nhật (Rectangle — `Xử lý / Process`):** Biểu diễn các phép gán, khởi tạo ngoại vi, tính toán nội bộ hoặc đóng gói dữ liệu.
-- **Hình bình hành (Parallelogram — `Nhập / Xuất / I/O`):** Biểu diễn thao tác đọc dữ liệu từ cảm biến/ADC hoặc phát/xuất bản tin qua giao tiếp `UART`, `LoRa`, `USB`.
-- **Hình thoi (Diamond — `Quyết định / Decision`):** Biểu diễn các điều kiện kiểm tra logic (`Đúng` / `Sai`). Mỗi hình thoi tuân thủ quy tắc **1 đường vào ở đỉnh trên** và **2 đường ra độc lập** (đỉnh dưới và đỉnh bên phải).
-- **Đường vòng lặp ngoài (Single Outer Loop Return):** Mọi nhánh rẽ trong chu kỳ đều tiến về phía dưới và hội tụ vào **duy nhất 1 đường vòng lặp ngoài** đi bên trái để quay về đầu vòng lặp, không cắt chéo bất kỳ nhánh nào.
+**Quy ước:**
+- Đường liền: Luồng dữ liệu và giao tiếp.
+- Đường nét đứt: Đường cấp nguồn.
+- Đường nét chấm: Luồng điều khiển.
+- Mũi tên một chiều: Truyền dữ liệu một chiều.
+- Mũi tên hai chiều: Giao tiếp hai chiều.
 
-### 2.2. Lưu đồ con A: Thuật toán Trạm bay UAV (`Firmware_UAV_ESP32.ino`)
+```mermaid
+flowchart LR
 
-| Bước | Hình khối ISO 5807 | Nội dung trong khối | Mô tả chi tiết xử lý & Cơ chế chịu lỗi (Exception Handling) |
+    subgraph UAV["1. UAV STATION — ESP32 DEVKIT V1"]
+        direction TB
+
+        subgraph POWER_UAV["POWER MANAGEMENT"]
+            direction LR
+            BAT["LiPo Battery<br/>3S — 11.1V to 12.6V"]
+            BUCK["Mini 360 Buck Converter<br/>Output: 5.0V"]
+            BAT -->|"IN+ / IN-"| BUCK
+        end
+
+        subgraph SENSORS_UAV["SENSOR ACQUISITION"]
+            direction LR
+            BMP1["BMP280 #1<br/>Unshielded"]
+            BMP2["BMP280 #2<br/>Pagoda Shield"]
+        end
+
+        MCU["ESP32 DevKit V1<br/>Main Controller<br/>Watchdog: 15s"]
+
+        ADC["Battery Monitoring<br/>ADC1 — GPIO34<br/>Voltage Divider<br/>100kΩ / 33kΩ"]
+
+        RADIO_TX["LoRa E32-433T20D<br/>UAV RF Module<br/>M0 = M1 = GND"]
+
+        BUCK -.->|"5V / GND"| MCU
+        BUCK -.->|"5V / GND"| RADIO_TX
+
+        BAT -.->|"Battery Voltage"| ADC
+        ADC -->|"ADC Measurement"| MCU
+
+        BMP1 <-->|"I2C-0<br/>SDA: GPIO21<br/>SCL: GPIO22"| MCU
+        BMP2 <-->|"I2C-1<br/>SDA: GPIO18<br/>SCL: GPIO19"| MCU
+
+        MCU <-->|"UART2 — 9600 8N1<br/>RX2: GPIO16<br/>TX2: GPIO17"| RADIO_TX
+    end
+
+    subgraph RF["2. WIRELESS COMMUNICATION"]
+        direction TB
+
+        RF_LINK["LoRa RF Channel<br/>433 MHz<br/>Transparent Mode 0"]
+
+        RF_DATA["Downlink<br/>JSON Telemetry + ACK"]
+        RF_CMD["Uplink<br/>SPEED_1S / SPEED_5S<br/>SET_FREQ:n / PING / RESET_UAV"]
+
+        RF_LINK --- RF_DATA
+        RF_LINK --- RF_CMD
+    end
+
+    subgraph GROUND["3. GROUND STATION — ESP8266 NODEMCU"]
+        direction TB
+
+        RADIO_RX["LoRa E32-433T20D<br/>Ground RF Module<br/>M0 = M1 = GND"]
+
+        ESP8266["ESP8266 NodeMCU<br/>Ground Controller<br/>Heartbeat Timeout: 12s"]
+
+        BMP3["BMP280 #3<br/>Ground Reference Sensor"]
+
+        subgraph PC_SYSTEM["GROUND PC SYSTEM"]
+            direction TB
+
+            GW["Python Backend<br/>gateway.py<br/>Serial Reader + Command Whitelist"]
+
+            DB[("SQLite Database<br/>uav_data.db<br/>WAL Mode")]
+
+            UI["Streamlit Dashboard<br/>app.py<br/>Telemetry Visualization<br/>RBL Performance KPIs"]
+
+            GW <-->|"Database Operations"| DB
+            DB -->|"Stored Measurements"| UI
+        end
+
+        RADIO_RX <-->|"SoftwareSerial<br/>9600 bps<br/>RX: D2 / GPIO4<br/>TX: D1 / GPIO5"| ESP8266
+
+        BMP3 <-->|"I2C Ground<br/>SDA: D5 / GPIO14<br/>SCL: D6 / GPIO12"| ESP8266
+
+        ESP8266 <-->|"USB Serial — 115200 bps<br/>JSON Telemetry / Commands / ACK"| GW
+    end
+
+    RADIO_TX <-->|"433 MHz RF"| RF_LINK
+    RF_LINK <-->|"433 MHz RF"| RADIO_RX
+
+    classDef power fill:#fff3cd,stroke:#d39e00,color:#333
+    classDef controller fill:#dbeafe,stroke:#2563eb,color:#172554
+    classDef sensor fill:#dcfce7,stroke:#16a34a,color:#14532d
+    classDef radio fill:#f3e8ff,stroke:#9333ea,color:#581c87
+    classDef software fill:#e0f2fe,stroke:#0284c7,color:#0c4a6e
+
+    class BAT,BUCK power
+    class MCU,ESP8266 controller
+    class BMP1,BMP2,BMP3,ADC sensor
+    class RADIO_TX,RADIO_RX,RF_LINK,RF_DATA,RF_CMD radio
+    class GW,DB,UI software
+```
+
+### Hardware Interface Specification
+
+| Component | Interface | Connection | Function |
 |---|---|---|---|
-| **A1** | Hình bầu dục | **Bắt đầu (Start)** | Cấp nguồn cho ESP32 DevKit V1 từ mạch hạ áp Mini 360 (5.0V) hoặc cổng USB. |
-| **A2** | Hình chữ nhật | **Khởi tạo ngoại vi & WDT** | Khởi tạo `Serial` (115200), `Serial2` LoRa (9600), ADC `GPIO 34` (`ADC_11db`), 2 bus `Wire` (21/22) & `Wire1` (18/19) với `setTimeOut(50ms)`, và kích hoạt **Hardware Watchdog Timer 15 giây**. |
-| **A3** | Hình chữ nhật | **Reset bộ đếm Watchdog** | Gọi `esp_task_wdt_reset()` ở đầu mỗi vòng lặp. Nếu MCU bị treo quá `15s`, phần cứng tự động Hard-Reset để cứu hệ thống trên không. |
-| **A4** | Hình thoi | **Có lệnh từ UART?** | Kiểm tra `Serial2.available()` không chặn (*non-blocking*):<br>• **Đúng:** Chuyển sang bước **A4_IO**.<br>• **Sai:** Đi thẳng xuống bước **A5**. |
-| **A4_IO** | Hình bình hành | **Nhận lệnh & gửi ACK** | Đọc từng ký tự vào `cmdBuf[32]`, thực thi lệnh (`SPEED_1S`, `SPEED_5S`, `SET_FREQ:n`, `PING`, `RESET_UAV`) và phát trả gói xác nhận `{"src":"uav","ack":"..."}`. |
-| **A5** | Hình thoi | **Đủ chu kỳ lấy mẫu?** | Kiểm tra `millis() - lastReadTime >= readInterval`:<br>• **Đúng:** Đi xuống bước **A6** để lấy mẫu.<br>• **Sai (Chưa tới hạn):** Đi theo nhánh bên phải xuống cuối vòng quét (**A10**). |
-| **A6** | Hình bình hành | **Đọc cảm biến & áp pin** | Đọc nhiệt độ/áp suất từ BMP280 #1 (`Wire`), BMP280 #2 (`Wire1`) và lấy trung bình 16 mẫu điện áp tại chân `GPIO 34`. |
-| **A7** | Hình thoi | **Dữ liệu đo hợp lệ?** | Kiểm tra giá trị `NaN` và ngưỡng áp suất vật lý `[300, 1100] hPa`:<br>• **Đúng:** Đi thẳng xuống bước **A8**.<br>• **Sai:** Rẽ sang bước xử lý lỗi **A7_ERR**. |
-| **A7_ERR** | Hình chữ nhật | **Gán null & khởi tạo lại** | Gán `nullptr` (`null` trong JSON, tuyệt đối không dùng số `0` giả) cho kênh bị lỗi và gọi lại `initBMP()` ở chu kỳ kế tiếp để tự phục hồi khi dây I2C rung lắc. |
-| **A8** | Hình chữ nhật | **Đóng gói bản tin JSON** | Đóng gói `seq`, `t1, h1, p1`, `t2, h2, p2`, `bat, vbat, pwr` thành 1 dòng JSON (nếu `vbat < 6.0V` thì gán `pwr = "usb"`, `bat = null`). |
-| **A9** | Hình bình hành | **Phát gói tin qua LoRa** | Gửi dòng JSON qua `Serial2.println()` sang module LoRa E32 và tăng biến đếm `seqNo++`. |
-| **A10** | Hình thoi | **Ngắt nguồn / Dừng?** | Kiểm tra trạng thái dừng hệ thống:<br>• **Sai:** Quay lại đầu vòng lặp (**A3**) qua đường vòng lặp ngoài.<br>• **Đúng:** Chuyển sang khối **Kết thúc (End)**. |
+| BMP280 #1 | I2C-0 | GPIO21 / GPIO22 | Unshielded sensing |
+| BMP280 #2 | I2C-1 | GPIO18 / GPIO19 | Pagoda-shield sensing |
+| LoRa UAV | UART2 | GPIO16 / GPIO17 | Wireless communication |
+| Battery Monitor | ADC1 | GPIO34 | Battery voltage measurement |
+| LoRa Ground | SoftwareSerial | D2 / D1 | Wireless communication |
+| BMP280 #3 | I2C | D5 / D6 | Ground reference measurement |
+| ESP8266 to PC | USB Serial | 115200 bps | Telemetry and command transfer |
 
-### 2.3. Lưu đồ con B: Thuật toán Trạm mặt đất (`Firmware_Ground_ESP8266.ino` & `gateway.py`)
-
-| Bước | Hình khối ISO 5807 | Nội dung trong khối | Mô tả chi tiết xử lý & Máy trạng thái (FSM) |
-|---|---|---|---|
-| **B1** | Hình bầu dục | **Bắt đầu (Start)** | Kết nối ESP8266 NodeMCU vào PC qua cáp microUSB và khởi chạy `gateway.py`. |
-| **B2** | Hình chữ nhật | **Khởi tạo Serial, LoRa, I2C** | Mở `Serial` (115200 bps), `SoftwareSerial` LoRa (`D2=RX, D1=TX`, 9600 bps, bộ đệm **256 byte**), và I2C cho BMP280 #3 mặt đất (`SDA=D5, SCL=D6`). |
-| **B3** | Hình thoi | **Nhận gói tin LoRa?** | Đọc không chặn từ `loraSerial` cho tới khi gặp ký tự `\n` và giải mã JSON:<br>• **Đúng:** Đi xuống bước **B4**.<br>• **Sai:** Rẽ phải sang kiểm tra thời gian chờ **B3_TM**. |
-| **B4** | Hình chữ nhật | **Cập nhật mốc Heartbeat** | Cập nhật `lastLoraReceived = millis()`. Nếu gói nhận được là phản hồi lệnh (`ack`), xuất ngay `{"status":"ack","ack":"..."}` lên PC. |
-| **B5** | Hình bình hành | **Đọc cảm biến mặt đất** | Đọc nhiệt độ `t3` và áp suất `p3` từ cảm biến tham chiếu BMP280 #3 tại mặt đất (nếu lỗi gán `null`). |
-| **B6** | Hình bình hành | **Xuất gói Online qua USB** | Hợp nhất trường dữ liệu UAV và mặt đất, xuất dòng JSON `{"status":"online",...}` qua USB Serial lên `gateway.py` để lưu vào SQLite. |
-| **B3_TM** | Hình thoi | **Quá hạn 12 giây?** | Kiểm tra điều kiện mất sóng `millis() - lastLoraReceived > 12000 ms`:<br>• **Đúng:** Đi xuống bước **B3_OUT**.<br>• **Sai:** Hội tụ về bước **B7**. |
-| **B3_OUT** | Hình bình hành | **Xuất gói Offline USB** | Cứ mỗi `5 giây`, đọc cảm biến mặt đất (`t3, p3`) và phát gói cảnh báo `{"status":"offline","t3":...}` lên PC để Dashboard đổi sang trạng thái đỏ. |
-| **B7** | Hình thoi | **Có lệnh từ máy tính?** | Kiểm tra dữ liệu từ cổng USB Serial (đã được `gateway.py` lọc qua Whitelist `ALLOWED_CMDS`):<br>• **Đúng:** Đi xuống bước **B8**.<br>• **Sai:** Chuyển thẳng xuống bước **B9**. |
-| **B8** | Hình bình hành | **Truyền lệnh qua LoRa** | Đọc dòng lệnh từ PC và phát qua `loraSerial.println(cmd)` lên Trạm bay UAV. |
-| **B9** | Hình thoi | **Đóng cổng / Dừng?** | Kiểm tra trạng thái ngắt kết nối:<br>• **Sai:** Quay lại đầu vòng quét (**B3**) qua đường vòng lặp ngoài.<br>• **Đúng:** Đóng cổng Serial và **Kết thúc (End)**. |
+**Important hardware notes:**
+- ESP32 and ESP8266 use separate LoRa E32-433T20D modules.
+- LoRa communication operates at 433 MHz.
+- LoRa modules use Transparent Mode 0.
+- The UART interface between ESP32 and LoRa operates at 9600 bps.
+- The ground station forwards received telemetry to the PC through USB Serial.
 
 ---
 
-## 3. End-to-End Telemetry & Command Data Flow (Luồng Dữ Liệu & Điều Khiển 2 Chiều)
+# 2. Firmware Control Flowchart & Exception Handling
 
-<!-- VỊ TRÍ HIỂN THỊ ẢNH 3: Tải file System_DataFlow.png vào thư mục Diagrams/ -->
-![System Data Flow Diagram](./System_DataFlow.png)
+**Mục đích:** Mô tả trình tự thực thi firmware, điều kiện rẽ nhánh, cơ chế phục hồi cảm biến và xử lý ngoại lệ.
 
-### 3.1. Luồng dữ liệu cảm biến chiều xuống (Downlink Telemetry — Nét liền Trái sang Phải)
+**Quy ước:**
+- Oval: Start / End.
+- Rectangle: Processing.
+- Diamond: Decision.
+- Parallelogram: Input / Output.
+- Solid arrows: Main execution flow.
+- Dashed arrows: Exception / Watchdog flow.
 
-1. **Chặng 1 — Thu thập tại Trạm UAV (ESP32):**
-   - Đọc 2 cảm biến trên 2 bus I2C tách biệt và điện áp pin LiPo trên `GPIO 34`.
-   - Đóng gói thành 1 dòng JSON thuần kết thúc bằng `\n` và phát qua UART2 sang LoRa E32 (9600 bps):
-     ```json
-     {"seq":12,"t1":31.04,"h1":null,"p1":1005.85,"t2":30.42,"h2":null,"p2":1005.90,"bat":85,"vbat":11.82,"pwr":"bat"}
-     ```
+## 2.1. UAV Firmware — ESP32
 
-2. **Chặng 2 — Hợp nhất dữ liệu tại Trạm Mặt Đất (ESP8266 Gateway):**
-   - Khi nhận gói hợp lệ từ UAV, ESP8266 đọc thêm cảm biến tham chiếu mặt đất (`t3, h3, p3`) và đẩy gói `online` qua cổng USB Serial (115200 bps):
-     ```json
-     {"status":"online","seq":12,"t1":31.04,"h1":null,"p1":1005.85,"t2":30.42,"h2":null,"p2":1005.90,"bat":85,"vbat":11.82,"pwr":"bat","t3":33.14,"h3":null,"p3":1005.83}
-     ```
-   - Nếu quá `12 giây` không nhận được tín hiệu từ UAV, ESP8266 tự động phát gói `offline` định kỳ mỗi `5 giây`:
-     ```json
-     {"status":"offline","t3":33.14,"h3":null,"p3":1005.83}
-     ```
+```mermaid
+flowchart TD
 
-3. **Chặng 3 — Lưu trữ đa luồng tại Backend (`gateway.py` & SQLite WAL):**
-   - Luồng đọc nền (`_reader` daemon thread) phân tích cú pháp JSON, chuyển các giá trị `NaN`/`null` thành `NULL` chuẩn trong SQLite và ghi đồng thời vào 2 bảng `readings` và `events` trong file `uav_data.db` (chế độ `PRAGMA journal_mode=WAL`).
+    U1(["START<br/>ESP32 Boot"])
 
-4. **Chặng 4 — Hiển thị & Phân tích định lượng RBL trên Streamlit (`app.py`):**
-   - Giao diện tự động làm mới định kỳ bằng `@st.fragment`, cập nhật 4 thẻ Telemetry, vẽ 4 biểu đồ tương tác Altair và tự động tính 4 chỉ số nghiên cứu:
-     - **PDR (*Packet Delivery Ratio*):** Tính tỷ lệ nhận gói thành công từ cột `seq`.
-     - **AoI (*Age of Information*):** Độ tươi dữ liệu tính từ thời điểm nhận gói `online` gần nhất.
-     - **Downwash MAE & RMSE:** Sai số tuyệt đối trung bình và sai số toàn phương trung bình giữa cảm biến không vỏ (`t1`) và cảm biến có vỏ Pagoda (`t2`).
+    U2["Initialize UART2<br/>9600 bps"]
 
-### 3.2. Luồng lệnh điều khiển & phản hồi chiều lên (Uplink Command & ACK — Nét đứt Phải sang Trái)
+    U3["Initialize ADC GPIO34<br/>Initialize Dual I2C<br/>Wire: GPIO21 / GPIO22<br/>Wire1: GPIO18 / GPIO19"]
 
-| Lệnh gửi từ Dashboard | Cú pháp kiểm duyệt (`ALLOWED_CMDS`) | Tác dụng trên Trạm UAV | Bản tin xác nhận trả về PC (`ACK`) |
-|---|---|---|---|
-| **Chu kỳ 1 giây** | `^SPEED_1S$` | Đặt `readInterval = 1000 ms` (bay đo đạc tích cực) | `{"status":"ack","ack":"SPEED_1S"}` |
-| **Chu kỳ 5 giây** | `^SPEED_5S$` | Đặt `readInterval = 5000 ms` (chế độ mặc định) | `{"status":"ack","ack":"SPEED_5S"}` |
-| **Chu kỳ tùy chỉnh** | `^SET_FREQ:([1-9]\|[1-5][0-9]\|60)$` | Đặt `readInterval = n * 1000 ms` (`1 ≤ n ≤ 60`) | `{"status":"ack","ack":"SET_FREQ"}` |
-| **Kiểm tra kết nối** | `^PING$` | Kiểm tra đường truyền LoRa 2 chiều | `{"status":"ack","ack":"PING"}` |
-| **Khởi động lại UAV** | `^RESET_UAV$` | Gọi `ESP.restart()` khởi động lại ESP32 từ xa | `{"status":"ack","ack":"RESET"}` |
+    U4["Initialize Hardware Watchdog<br/>Timeout: 15 seconds"]
+
+    U5["Enter Main Loop<br/>Reset Watchdog Timer"]
+
+    U6[/"Check UART2 Buffer<br/>Read Incoming Command"/]
+
+    U7{"Command Available?"}
+
+    U8["Parse Command Buffer<br/>Execute SPEED_1S / SPEED_5S<br/>SET_FREQ:n / PING / RESET"]
+
+    U9[/"Transmit Command ACK<br/>Through LoRa E32"/]
+
+    U10{"Sampling Interval Reached?"}
+
+    U11["Check BMP280 Status<br/>bme1_ok / bme2_ok"]
+
+    U12{"Both Sensors Ready?"}
+
+    U13["Reinitialize Failed Sensor<br/>Execute initBMP()"]
+
+    U14[/"Read BMP280 Measurements<br/>t1, p1, t2, p2"/]
+
+    U15{"Valid Sensor Data?"}
+
+    U16["Replace Invalid Values<br/>With JSON null<br/>Pressure Range: 300–1100 hPa"]
+
+    U17[/"Read Battery Voltage<br/>ADC GPIO34<br/>Average 16 Samples"/]
+
+    U18{"Battery Voltage<br/>Below 6.0V?"}
+
+    U19["Set Power Status<br/>pwr = usb<br/>bat = null"]
+
+    U20["Calculate Battery Status<br/>Voltage and Percentage"]
+
+    U21["Build JSON Telemetry<br/>Increment seqNo++"]
+
+    U22[/"Transmit JSON<br/>Through LoRa E32"/]
+
+    U23(["END OF CYCLE"])
+
+    U1 --> U2
+    U2 --> U3
+    U3 --> U4
+    U4 --> U5
+
+    U5 --> U6
+    U6 --> U7
+
+    U7 -->|"YES"| U8
+    U8 --> U9
+    U9 --> U10
+
+    U7 -->|"NO"| U10
+
+    U10 -->|"NO"| U23
+    U10 -->|"YES"| U11
+
+    U11 --> U12
+
+    U12 -->|"NO"| U13
+    U12 -->|"YES"| U14
+
+    U13 --> U14
+
+    U14 --> U15
+
+    U15 -->|"NO"| U16
+    U15 -->|"YES"| U17
+
+    U16 --> U17
+
+    U17 --> U18
+
+    U18 -->|"YES"| U19
+    U18 -->|"NO"| U20
+
+    U19 --> U21
+    U20 --> U21
+
+    U21 --> U22
+    U22 --> U23
+
+    U23 --> U5
+
+    U5 -.->|"Watchdog Timeout > 15s"| U24["Watchdog Panic<br/>Automatic ESP32 Hard Reset"]
+
+    classDef start fill:#dcfce7,stroke:#16a34a,color:#14532d
+    classDef process fill:#dbeafe,stroke:#2563eb,color:#172554
+    classDef decision fill:#fef3c7,stroke:#d97706,color:#78350f
+    classDef io fill:#f3e8ff,stroke:#9333ea,color:#581c87
+    classDef exception fill:#fee2e2,stroke:#dc2626,color:#7f1d1d
+
+    class U1,U23 start
+    class U2,U3,U4,U5,U8,U11,U13,U16,U19,U20,U21 process
+    class U7,U10,U12,U15,U18 decision
+    class U6,U9,U14,U17,U22 io
+    class U24 exception
+```
+
+## 2.2. Ground Station Firmware — ESP8266
+
+```mermaid
+flowchart TD
+
+    G1(["START<br/>ESP8266 Boot"])
+
+    G2["Initialize USB Serial<br/>115200 bps"]
+
+    G3["Initialize LoRa SoftwareSerial<br/>9600 bps / 256B Buffer"]
+
+    G4["Initialize BMP280 #3<br/>SDA: D5 / SCL: D6"]
+
+    G5["Initialize Heartbeat Timer<br/>Timeout: 12 seconds"]
+
+    G6["Enter Main Loop"]
+
+    G7[/"Read Incoming LoRa Buffer"/]
+
+    G8{"LoRa Packet Received?"}
+
+    G9{"Packet Type?"}
+
+    G10[/"Read ACK Response<br/>Extract ACK Message"/]
+
+    G11[/"Forward ACK JSON<br/>To PC Through USB"/]
+
+    G12["Update Last LoRa Received<br/>Timestamp"]
+
+    G13[/"Read Ground BMP280<br/>t3 / p3"/]
+
+    G14[/"Forward Telemetry JSON<br/>To PC Through USB"/]
+
+    G15{"Heartbeat Timeout?<br/>> 12 seconds"}
+
+    G16[/"Read Ground BMP280<br/>Generate Offline Status"/]
+
+    G17[/"Send Offline JSON<br/>To PC Through USB"/]
+
+    G18[/"Check Incoming PC Command<br/>USB Serial"/]
+
+    G19{"Command Available?"}
+
+    G20["Validate Command<br/>Prepare LoRa Transmission"]
+
+    G21[/"Forward Command<br/>To UAV Through LoRa"/]
+
+    G22(["END OF CYCLE"])
+
+    G1 --> G2
+    G2 --> G3
+    G3 --> G4
+    G4 --> G5
+    G5 --> G6
+
+    G6 --> G7
+    G7 --> G8
+
+    G8 -->|"YES"| G9
+    G8 -->|"NO"| G15
+
+    G9 -->|"ACK"| G10
+    G10 --> G11
+    G11 --> G18
+
+    G9 -->|"Telemetry"| G12
+    G12 --> G13
+    G13 --> G14
+    G14 --> G18
+
+    G15 -->|"YES"| G16
+    G16 --> G17
+    G17 --> G18
+
+    G15 -->|"NO"| G18
+
+    G18 --> G19
+
+    G19 -->|"YES"| G20
+    G20 --> G21
+    G21 --> G22
+
+    G19 -->|"NO"| G22
+
+    G22 --> G6
+
+    classDef start fill:#dcfce7,stroke:#16a34a,color:#14532d
+    classDef process fill:#dbeafe,stroke:#2563eb,color:#172554
+    classDef decision fill:#fef3c7,stroke:#d97706,color:#78350f
+    classDef io fill:#f3e8ff,stroke:#9333ea,color:#581c87
+
+    class G1,G22 start
+    class G2,G3,G4,G5,G6,G12,G20 process
+    class G8,G9,G15,G19 decision
+    class G7,G10,G11,G13,G14,G16,G17,G18,G21 io
+```
+
+### Firmware Exception Handling
+
+| Exception | Detection | Handling |
+|---|---|---|
+| ESP32 firmware hang | Watchdog timeout > 15s | Automatic hard reset |
+| BMP280 initialization failure | bme1_ok / bme2_ok | Reinitialize sensor |
+| Invalid sensor reading | NaN / invalid pressure | Replace value with null |
+| Low battery reading | Vbat < 6.0V | Set USB power status |
+| LoRa communication loss | Heartbeat timeout > 12s | Send offline status |
+| Invalid command | Command validation | Reject unsupported command |
+
+---
+
+# 3. End-to-End Telemetry & Command Data Flow
+
+**Mục đích:** Mô tả quá trình dữ liệu đi từ cảm biến UAV đến Dashboard và chiều ngược lại khi người dùng gửi lệnh điều khiển.
+
+**Quy ước:**
+- Telemetry: UAV → Ground Station → Backend → Database → Dashboard.
+- Command: Dashboard → Backend → Ground Station → UAV.
+- ACK: UAV → Ground Station → Backend → Dashboard.
+- Các luồng dữ liệu được phân tách để tránh nhầm lẫn giữa Telemetry và Control.
+
+```mermaid
+flowchart LR
+
+    subgraph UAV["1. UAV DATA ACQUISITION"]
+        direction TB
+
+        SENSORS["BMP280 #1<br/>BMP280 #2<br/>Temperature / Pressure"]
+
+        BATTERY["Battery Monitor<br/>Voltage / Percentage"]
+
+        ESP32["ESP32 Controller<br/>Sensor Processing<br/>JSON Packaging"]
+
+        LORA_TX["LoRa E32 #1<br/>UART2 — 9600 bps"]
+
+        SENSORS -->|"I2C Data"| ESP32
+        BATTERY -->|"ADC Data"| ESP32
+        ESP32 -->|"Telemetry JSON"| LORA_TX
+    end
+
+    subgraph WIRELESS["2. LoRa WIRELESS CHANNEL"]
+        direction TB
+
+        RF["433 MHz RF Link<br/>Transparent Mode 0"]
+    end
+
+    subgraph GROUND["3. GROUND STATION"]
+        direction TB
+
+        LORA_RX["LoRa E32 #2"]
+
+        ESP8266["ESP8266 NodeMCU<br/>Packet Processing"]
+
+        GROUND_SENSOR["BMP280 #3<br/>Ground Reference"]
+
+        ESP8266 -->|"I2C Measurement"| GROUND_SENSOR
+        LORA_RX -->|"UART Data"| ESP8266
+    end
+
+    subgraph PC["4. PC BACKEND & STORAGE"]
+        direction TB
+
+        GW["gateway.py<br/>Serial Reader<br/>JSON Parser<br/>Command Whitelist"]
+
+        DB[("SQLite Database<br/>uav_data.db<br/>WAL Mode")]
+
+        GW <-->|"Read / Write"| DB
+    end
+
+    subgraph DASHBOARD["5. VISUALIZATION"]
+        direction TB
+
+        UI["Streamlit Dashboard<br/>Live Telemetry<br/>Map View<br/>Performance KPIs"]
+
+        KPI["Calculated Metrics<br/>PDR / AoI / MAE / RMSE"]
+
+        UI --> KPI
+    end
+
+    LORA_TX <-->|"433 MHz RF"| RF
+    RF <-->|"433 MHz RF"| LORA_RX
+
+    ESP8266 <-->|"USB Serial<br/>115200 bps"| GW
+
+    GW -->|"Stored Measurements"| DB
+    DB -->|"Historical / Latest Data"| UI
+
+    UI -.->|"User Command"| GW
+    GW -.->|"USB Serial Command"| ESP8266
+    ESP8266 -.->|"LoRa Uplink Command"| LORA_RX
+
+    classDef hardware fill:#dbeafe,stroke:#2563eb,color:#172554
+    classDef sensor fill:#dcfce7,stroke:#16a34a,color:#14532d
+    classDef communication fill:#f3e8ff,stroke:#9333ea,color:#581c87
+    classDef backend fill:#e0f2fe,stroke:#0284c7,color:#0c4a6e
+    classDef dashboard fill:#fef3c7,stroke:#d97706,color:#78350f
+
+    class ESP32,ESP8266 hardware
+    class SENSORS,BATTERY,GROUND_SENSOR sensor
+    class LORA_TX,LORA_RX,RF communication
+    class GW,DB backend
+    class UI,KPI dashboard
+```
+
+## 3.1. Telemetry Transmission Sequence
+
+```mermaid
+sequenceDiagram
+    autonumber
+
+    participant S as BMP280 x2 + ADC
+    participant U as ESP32 + LoRa E32 #1
+    participant R as LoRa RF 433 MHz
+    participant G as LoRa E32 #2 + ESP8266
+    participant P as Python Backend
+    participant D as SQLite Database
+    participant UI as Streamlit Dashboard
+
+    S->>U: I2C Measurements (t1, p1, t2, p2)
+    S->>U: ADC Battery Measurement (vbat)
+    U->>U: Validate and Package JSON
+    U->>R: Transmit Telemetry
+    R->>G: Receive Telemetry
+    G->>G: Update Heartbeat Timestamp
+    G->>G: Read Ground BMP280 #3
+    G->>P: USB Serial JSON (115200 bps)
+    P->>P: Parse and Validate JSON
+    P->>D: Insert Readings and Events
+    D-->>UI: Provide Latest and Historical Data
+    UI->>UI: Calculate PDR / AoI / MAE / RMSE
+    UI->>UI: Update Live Visualization
+```
+
+## 3.2. Command and ACK Transmission Sequence
+
+```mermaid
+sequenceDiagram
+    autonumber
+
+    actor User
+    participant UI as Streamlit Dashboard
+    participant P as Python Backend
+    participant G as ESP8266 Ground Station
+    participant R as LoRa RF 433 MHz
+    participant U as ESP32 UAV Controller
+
+    User->>UI: Select Command (SPEED_1S / PING)
+    UI->>P: Submit Command
+    P->>P: Validate Command Whitelist
+    P->>G: USB Serial Command
+    G->>R: Forward Command Through LoRa
+    R->>U: Receive Command
+    U->>U: Parse and Execute Command
+    U->>R: Transmit ACK JSON
+    R->>G: Receive ACK
+    G->>P: Forward ACK Through USB Serial
+    P->>P: Parse ACK Response
+    P->>UI: Update ACK Status
+    UI-->>User: Display Command Result
+```
+
+---
+
+# 4. Technical Diagram Conventions
+
+The diagrams follow a consistent set of technical drawing conventions to improve readability, maintainability, and technical communication.
+
+| Element | Convention | Application |
+|---|---|---|
+| Functional blocks | Rectangle | Hardware and software modules |
+| Start / End | Oval | Firmware execution boundaries |
+| Decision | Diamond | Conditional branches |
+| Input / Output | Parallelogram | Sensor reading and data transmission |
+| Solid arrow | Data flow | Telemetry and measurement |
+| Dashed arrow | Control flow / power | Commands, exceptions, power |
+| Bidirectional arrow | Two-way communication | UART, I2C, LoRa |
+| Subgraph | Functional hierarchy | UAV, RF, Ground Station |
+
+## Design Principles
+
+1. **Hierarchy:** Separate the system into independent functional subsystems.
+2. **Signal Direction:** Clearly identify the direction of data and command transmission.
+3. **Consistency:** Use consistent shapes, labels, and colors for equivalent functions.
+4. **Readability:** Keep block descriptions concise and avoid unnecessary technical details.
+5. **Separation of Concerns:** Separate hardware architecture, firmware execution, and end-to-end data communication.
+6. **Traceability:** Ensure each diagram represents the same hardware interfaces and communication architecture.
+
+---
+
+**Project:** Adaptive IoT-UAV Environmental Monitoring System with Downwash-Aware Sensing and Adaptive Communication
+
+**Course:** IOT102 — Fall 2026
+
+**Team:** Group 5
