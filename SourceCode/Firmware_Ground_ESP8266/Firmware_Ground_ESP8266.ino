@@ -8,8 +8,8 @@
 // ---------------- CẤU HÌNH CHÂN PHẦN CỨNG (ESP8266) ----------------
 
 // I2C cho BME280 số 3 (Ground Reference): D5 (GPIO14) = SCL, D6 (GPIO12) = SDA
-#define I2C_SCL D5
-#define I2C_SDA D6
+#define I2C_SCL D6
+#define I2C_SDA D5
 
 // SoftwareSerial cho LoRa E32
 // D2 (GPIO4) <- TXD của LoRa (Soft RX) ; D1 (GPIO5) -> RXD của LoRa (Soft TX)
@@ -199,16 +199,35 @@ void receiveFromUAV() {
 }
 
 // ---------------- CHUYỂN TIẾP LỆNH TỪ PC LÊN UAV (2 CHIỀU) ----------------
+//void forwardCommandToUAV() {
+//  if (Serial.available()) {
+//    String cmd = Serial.readStringUntil('\n');
+//    cmd.trim();
+//    if (cmd.length() > 0) {
+      // VD: SPEED_1S, SPEED_5S, RESET_UAV, SET_FREQ:3, PING (có hoặc không có < >)
+//      loraSerial.println(cmd);
+//    }
+//  }
+//}
+
 void forwardCommandToUAV() {
   if (Serial.available()) {
     String cmd = Serial.readStringUntil('\n');
     cmd.trim();
-    if (cmd.length() > 0) {
-      // VD: SPEED_1S, SPEED_5S, RESET_UAV, SET_FREQ:3, PING (có hoặc không có < >)
-      loraSerial.println(cmd);
+
+    if (cmd.length() == 0) {
+      return;
     }
+
+    
+
+    loraSerial.println(cmd);
+    loraSerial.flush();
+
+    
   }
 }
+
 
 // ---------------- CẢNH BÁO MẤT KẾT NỐI (HEARTBEAT TIMEOUT) ----------------
 void checkConnectionTimeout() {
