@@ -145,20 +145,29 @@ PC: Streamlit + SQLite  ──lệnh (SPEED_1S/5S, SET_FREQ:n, PING, RESET_UAV)�
 
 Hệ thống đánh giá định lượng hiệu năng cảm biến (RQ1) và chất lượng truyền thông (RQ2) thông qua 4 chỉ số toán học chính (được tính toán trực tiếp trên Dashboard và script phân tích):
 
-1. **Mean Absolute Error (MAE — Sai số tuyệt đối trung bình):**
-   $$\text{MAE} = \frac{1}{N} \sum_{i=1}^{N} \left\vert{} x_i - x_{\text{ref}, i} \right\vert{}$$
-   Đánh giá độ lệch nhiệt độ/áp suất trung bình giữa cảm biến không vỏ ($T_1$) và cảm biến có vỏ Pagoda ($T_2$), hoặc giữa trạm bay và trạm mặt đất ($T_3$).
+Mean Absolute Error (MAE — Sai số tuyệt đối trung bình):
 
-2. **Root Mean Square Error (RMSE — Sai số toàn phương trung bình):**
-   $$\text{RMSE} = \sqrt{\frac{1}{N} \sum_{i=1}^{N} \left( x_i - x_{\text{ref}, i} \right)^2}$$
-   Nhấn mạnh các biên độ nhiễu đột biến (spikes) khi luồng gió cánh quạt thay đổi tốc độ.
+MAE = (1/N) × Σᵢ₌₁ᴺ |xᵢ − x_ref,ᵢ|
 
-3. **Packet Delivery Ratio (PDR — Tỷ lệ nhận gói tin thành công):**
-   $$\text{PDR} = \frac{N_{\text{received}}}{N_{\text{expected}}} \times 100\% = \frac{\text{count}(\text{unique } seq)}{\max(seq) - \min(seq) + 1} \times 100\%$$
+Đánh giá độ lệch nhiệt độ/áp suất trung bình giữa cảm biến không vỏ (T₁) và cảm biến có vỏ Pagoda (T₂), hoặc giữa trạm bay và trạm mặt đất (T₃).
 
-4. **Age of Information (AoI — Độ tươi của dữ liệu):**
-   $$\text{AoI}(t) = t_{\text{current}} - t_{\text{last\_online\_packet}}$$
-   Đo lường độ trễ thực tế từ lúc gói tin mới nhất của UAV được ghi nhận tại trạm mặt đất.
+Root Mean Square Error (RMSE — Sai số toàn phương trung bình):
+
+RMSE = √[(1/N) × Σᵢ₌₁ᴺ (xᵢ − x_ref,ᵢ)²]
+
+Nhấn mạnh các biên độ nhiễu đột biến (spikes) khi luồng gió cánh quạt thay đổi tốc độ.
+
+Packet Delivery Ratio (PDR — Tỷ lệ nhận gói tin thành công):
+
+PDR = (N_received / N_expected) × 100%
+
+= [count(unique seq) / (max(seq) − min(seq) + 1)] × 100%
+
+Age of Information (AoI — Độ tươi của dữ liệu):
+
+AoI(t) = t_current − t_last_online_packet
+
+Đo lường độ trễ thực tế từ lúc gói tin mới nhất của UAV được ghi nhận tại trạm mặt đất.
 
 ---
 
