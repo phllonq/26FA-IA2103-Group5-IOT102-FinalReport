@@ -159,13 +159,15 @@ Nhấn mạnh các biên độ nhiễu đột biến (spikes) khi luồng gió c
 
 Packet Delivery Ratio (PDR — Tỷ lệ nhận gói tin thành công):
 
-PDR = (N_received / N_expected) × 100%
+PDR = (N_unique_received / N_transmitted) × 100%
 
 = [count(unique seq) / (max(seq) − min(seq) + 1)] × 100%
 
 Age of Information (AoI — Độ tươi của dữ liệu):
 
-AoI(t) = t_current − t_last_online_packet
+\[
+AoI(t) = t - u(t)
+\]
 
 Đo lường độ trễ thực tế từ lúc gói tin mới nhất của UAV được ghi nhận tại trạm mặt đất.
 
