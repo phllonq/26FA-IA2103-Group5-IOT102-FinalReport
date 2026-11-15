@@ -1,7 +1,5 @@
 # AI Audit Entry Template
 
-> **Purpose:** Use this template to document one AI-assisted interaction. Replace every bracketed placeholder with verified information or retain `NOT VERIFIED`. Do not invent timestamps, participant names, approval records, quotations, sources, or test results.
-
 ## 1. Entry Metadata
 
 - **Entry ID:** [ENTRY-00X]
