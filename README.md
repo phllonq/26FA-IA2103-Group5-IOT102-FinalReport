@@ -46,10 +46,10 @@ Dự án **Adaptive IoT-UAV Environmental Monitoring System** giải quyết hai
 ## 3. Research Questions
 
 ### RQ1 — Downwash-Aware Sensing
-> **Câu hỏi nghiên cứu 1:** *Việc sử dụng vỏ chắn bức xạ và luồng khí (Pagoda Shield) kết hợp kiến trúc Dual-I2C trên UAV giúp giảm thiểu sai số đo nhiệt độ và áp suất ($\text{MAE}, \text{RMSE}$) do hiệu ứng gió đập cánh quạt (rotor downwash) và bức xạ nhiệt như thế nào khi so sánh với cảm biến trần (unshielded) và trạm tham chiếu mặt đất?*
+> **Câu hỏi nghiên cứu 1:** *Việc sử dụng vỏ chắn bức xạ và luồng khí (Pagoda Shield) kết hợp kiến trúc Dual-I2C trên UAV giúp giảm thiểu sai số đo nhiệt độ và áp suất (MAE,/ RMSE) do hiệu ứng gió đập cánh quạt (rotor downwash) và bức xạ nhiệt như thế nào khi so sánh với cảm biến trần (unshielded) và trạm tham chiếu mặt đất?*
 
 ### RQ2 — Adaptive Communication
-> **Câu hỏi nghiên cứu 2:** *Cơ chế điều chỉnh chu kỳ truyền dữ liệu thích ứng (`1s`, `5s`, hoặc tùy chỉnh `1–60s`) qua đường truyền LoRa 433 MHz ảnh hưởng như thế nào đến tỷ lệ nhận gói tin thành công ($\text{PDR}$), độ tươi của thông tin ($\text{AoI}$ — Age of Information) và hiệu quả tiết kiệm băng thông/năng lượng của trạm UAV?*
+> **Câu hỏi nghiên cứu 2:** *Cơ chế điều chỉnh chu kỳ truyền dữ liệu thích ứng (`1s`, `5s`, hoặc tùy chỉnh `1–60s`) qua đường truyền LoRa 433 MHz ảnh hưởng như thế nào đến tỷ lệ nhận gói tin thành công (PDR), độ tươi của thông tin (AoI — Age of Information) và hiệu quả tiết kiệm băng thông/năng lượng của trạm UAV?*
 
 ---
 
