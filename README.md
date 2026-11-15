@@ -135,8 +135,7 @@ PC: Streamlit + SQLite  ──lệnh (SPEED_1S/5S, SET_FREQ:n, PING, RESET_UAV)�
     ├── Backend_Dashboard/         Streamlit Liquid Glass UI (app.py) + SQLite Gateway (gateway.py)
     ├── Data_Analytics/            Script phân tích dữ liệu, hiệu chuẩn, đánh giá RQ1/RQ2
     ├── CAD_Schematic/             Sơ đồ mạch, file CAD 3D vỏ Pagoda, wiring_guide.md
-    ├── Hardware_Design/           Block diagram, schematic, flowchart (PDF/PNG)
-    └── Flight_Controller/         PX4 parameters, mission plan
+    └── Hardware_Design/           Block diagram, schematic, flowchart (PDF/PNG)
 ```
 
 ---
