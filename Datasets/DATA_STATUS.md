@@ -1,21 +1,21 @@
-# Data Status and Submission Note
+# Trạng thái dữ liệu và ghi chú bàn giao
 
-This package is a traceable organization of the source data supplied for this project.
+Gói dữ liệu này được tổ chức nhằm đảm bảo khả năng truy xuất và kiểm chứng nguồn dữ liệu được cung cấp cho dự án.
 
-## Completed from supplied evidence
-- Original gateway export preserved unchanged in `raw_source/`.
-- Three BMP280 streams separated into RQ1 CSV files.
-- Descriptive RQ1 statistics calculated from non-missing measurements.
-- Metadata, field dictionary, and import log generated.
+## Các nội dung đã hoàn thành dựa trên dữ liệu được cung cấp
+- File dữ liệu xuất từ gateway ban đầu được bảo toàn nguyên trạng trong `raw_source/`.
+- Ba luồng dữ liệu từ cảm biến BMP280 được tách thành các file CSV riêng biệt cho RQ1.
+- Các thống kê mô tả RQ1 được tính toán dựa trên những phép đo có dữ liệu hợp lệ (không bị thiếu).
+- Các tài liệu metadata, từ điển trường dữ liệu và nhật ký nhập dữ liệu đã được tạo.
 
-## Not completed because source evidence was not supplied
-- Flight-mode labels (ground / hover / forward).
-- Altitude and forward speed.
-- Verified experimental session identifiers.
-- Synchronized sensor-to-reference error analysis (MAE/RMSE).
-- RSSI/state/interval logs for adaptive transmission.
-- Fixed-rate comparison run.
-- Packet-level TX/RX/ACK logs.
-- Standard AoI calculation.
+## Các nội dung chưa thể hoàn thành do thiếu dữ liệu nguồn
+- Nhãn chế độ bay (mặt đất / bay treo / bay tiến).
+- Độ cao và tốc độ bay về phía trước.
+- Mã định danh phiên thực nghiệm đã được xác minh.
+- Phân tích sai số đồng bộ giữa cảm biến và giá trị tham chiếu (MAE/RMSE).
+- Nhật ký RSSI/trạng thái/khoảng thời gian phục vụ cơ chế truyền dữ liệu thích ứng.
+- Lần chạy thử nghiệm đối chứng với tốc độ truyền cố định.
+- Nhật ký TX/RX/ACK ở cấp độ gói tin.
+- Tính toán AoI (Age of Information) theo phương pháp tiêu chuẩn.
 
-RQ2 CSV files are intentionally schema-only. They must not be presented as measured results. Synthetic or invented experimental values have not been inserted.
+Các file CSV thuộc RQ2 được cố ý giữ ở dạng chỉ chứa cấu trúc schema. Không được trình bày chúng như những kết quả thực nghiệm đã được đo lường. Không có dữ liệu thực nghiệm tổng hợp hoặc tự tạo nào được bổ sung vào bộ dữ liệu.
