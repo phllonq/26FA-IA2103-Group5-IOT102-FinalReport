@@ -74,7 +74,7 @@ __pycache__/
 .venv/
 venv/
 
-# Runtime data của backend Streamlit (dùng nút Tải CSV hoặc copy vào Datasets/ khi cần nộp)
+# Runtime data của backend Streamlit 
 uav_data.db
 uav_data.db-wal
 uav_data.db-shm
