@@ -20,4 +20,4 @@ File dữ liệu nguồn chứa 910 bản ghi trong khoảng thời gian từ ng
 
 File dữ liệu nguồn ban đầu được bảo toàn tại `raw_source/uav_readings_original.csv`.
 
-**Lưu ý quan trọng:** Không có bất kỳ giá trị dữ liệu nào được tạo giả hoặc bổ sung. Các trường `session_id` để trống cho thấy file dữ liệu nguồn không cung cấp mã định danh phiên hoạt động. Phần tổng hợp RQ1 chỉ bao gồm các thống kê mô tả. Các chỉ số MAE/RMSE, so sánh giữa các chế độ bay và các chỉ số đánh giá hiệu suất RQ2 không được đưa ra khi thiếu dữ liệu cần thiết để tính toán.
+
