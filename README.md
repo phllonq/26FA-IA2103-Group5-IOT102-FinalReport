@@ -179,7 +179,7 @@ Lộ trình triển khai dự án trong 11 tuần theo chuẩn PBL + RBL của m
 | Tuần | Giai đoạn | Nội dung thực hiện & Kết quả (Deliverables) |
 |---|---|---|
 | **Tuần 1–2** | *Topic Proposal* | Xác định bài toán nhiễu gió Downwash trên UAV, đăng ký đề tài Nhóm 5 & viết Problem Statement. |
-| **Tuần 3** | *Literature Review* | Tổng hợp các bài báo IEEE/Scopus về UAV氣象 sensing, vỏ chắn bức xạ Pagoda và truyền thông LoRa; chốt RQ1 & RQ2. |
+| **Tuần 3** | *Literature Review* | Tổng hợp các bài báo IEEE/Scopus về UAV sensing, vỏ chắn bức xạ Pagoda và truyền thông LoRa; chốt RQ1 & RQ2. |
 | **Tuần 4** | *System Architecture* | Thiết kế Block Diagram, chuyển đổi kiến trúc từ Wi-Fi sang LoRa E32 433 MHz, lập sơ đồ nối chân Dual-I2C. |
 | **Tuần 5–6** | *Hardware & Firmware* | Hàn mạch hoàn chỉnh cho ESP32 & ESP8266, tinh chỉnh mạch hạ áp Mini 360 5.0V, viết firmware đọc cảm biến & đóng gói JSON. |
 | **Tuần 7** | **OPA1 Assessment** | Demo phần cứng cơ bản, kiểm tra kết nối cảm biến, báo cáo Block Diagram, Circuit Schematic & Flowchart. |
