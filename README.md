@@ -206,6 +206,6 @@ Nhóm tuân thủ nghiêm ngặt quy định về minh bạch học thuật và 
 1. Bosch Sensortec, *"BME280 — Combined humidity and pressure sensor datasheet,"* Document BST-BME280-DS002, 2022.
 2. Bosch Sensortec, *"BMP280 — Digital Pressure Sensor datasheet,"* Document BST-BMP280-DS001, 2021.
 3. T. Villa, F. Gonzalez, B. Miljievic, Z. D. Ristovski, and L. Morawska, *"An Overview of Small Unmanned Aerial Vehicles for Air Quality Measurements: Present Applications and Future Prospectives,"* **Sensors**, vol. 16, no. 7, p. 1072, 2016.
-4. S.och, M. Islam, et al., *"Investigation of Rotor Downwash Effects on Temperature and Humidity Measurements Using Multi-Rotor UAVs,"* **IEEE Sensors Journal**, 2021.
+4. M. Islam, et al., *"Investigation of Rotor Downwash Effects on Temperature and Humidity Measurements Using Multi-Rotor UAVs,"* **IEEE Sensors Journal**, 2021.
 5. R. D. Yates, Y. Sun, D. R. Brown, S. K. Kaul, E. Modiano, and S. Ulukus, *"Age of Information: An Introduction and Survey,"* **IEEE Journal on Selected Areas in Communications**, vol. 39, no. 5, pp. 1183–1210, May 2021.
 6.成都亿佰特电子科技有限公司 (Chengdu Ebyte Electronic Technology Co., Ltd.), *"E32-433T20D User Manual — SX1278 433MHz 100mW DIP Wireless Module,"* v1.6.
