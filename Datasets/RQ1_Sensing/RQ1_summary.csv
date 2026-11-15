@@ -1,0 +1,7 @@
+sensor_id,measurement,sample_count,mean_value,std_dev_sample,min_value,max_value,mae,rmse,comparison_status,notes
+BMP280_1_unshielded,temperature_c,459,31.302657952069712,2.735251981118926,20.46,43.72,,,NOT_CALCULATED,Descriptive statistics from uploaded gateway export; no synchronized reference pairing or flight-condition labels supplied.
+BMP280_1_unshielded,pressure_hpa,459,1006.4699782135077,1.2385680735780173,1004.18,1010.79,,,NOT_CALCULATED,Descriptive statistics from uploaded gateway export; no synchronized reference pairing or flight-condition labels supplied.
+BMP280_2_pagoda_shield,temperature_c,145,31.050551724137932,0.5341514289432778,30.47,33.47,,,NOT_CALCULATED,Descriptive statistics from uploaded gateway export; no synchronized reference pairing or flight-condition labels supplied.
+BMP280_2_pagoda_shield,pressure_hpa,145,1006.2155862068967,1.603921356075512,1004.43,1008.92,,,NOT_CALCULATED,Descriptive statistics from uploaded gateway export; no synchronized reference pairing or flight-condition labels supplied.
+BMP280_3_ground_reference,temperature_c,476,32.61863445378151,1.7382407394259034,24.28,33.48,,,NOT_CALCULATED,Descriptive statistics from uploaded gateway export; no synchronized reference pairing or flight-condition labels supplied.
+BMP280_3_ground_reference,pressure_hpa,476,1006.5356722689075,1.1896469930847853,1004.07,1010.69,,,NOT_CALCULATED,Descriptive statistics from uploaded gateway export; no synchronized reference pairing or flight-condition labels supplied.

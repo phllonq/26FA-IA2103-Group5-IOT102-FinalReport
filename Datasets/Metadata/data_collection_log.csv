@@ -1,0 +1,2 @@
+import_batch_id,source_file,first_timestamp,last_timestamp,source_record_count,online_record_count,offline_record_count,bmp280_1_measurement_rows,bmp280_2_measurement_rows,bmp280_3_measurement_rows,session_boundaries_verified,notes
+IMPORT_BATCH_001,uav_readings.csv,2026-11-12T18:17:45,2026-11-15T17:54:11,910,554,356,459,145,476,no,One exported gateway dataset; individual experimental session boundaries and flight conditions are not included in source.

@@ -1,0 +1,74 @@
+{
+  "project": {
+    "name": "Adaptive IoT-UAV Environmental Monitoring System with Downwash-Aware Sensing and Adaptive Communication",
+    "course": "IOT102",
+    "semester": "Fall 2026",
+    "group": 5
+  },
+  "hardware_architecture_as_documented_by_project": {
+    "uav_controller": "ESP32",
+    "ground_controller": "ESP8266",
+    "environmental_sensor": "BMP280",
+    "sensor_count": 3,
+    "uav_sensor_count": 2,
+    "ground_reference_sensor_count": 1,
+    "shield_design": "Pagoda Shield",
+    "radio_module": "E32-433T20D",
+    "nominal_frequency_mhz": 433
+  },
+  "data_source_verified": {
+    "filename": "uav_readings.csv",
+    "record_count": 910,
+    "first_timestamp": "2026-11-12T18:17:45",
+    "last_timestamp": "2026-11-15T17:54:11",
+    "status_counts": {
+      "online": 554,
+      "offline": 356
+    },
+    "non_null_measurement_counts": {
+      "t1": 459,
+      "p1": 459,
+      "t2": 145,
+      "p2": 145,
+      "t3": 476,
+      "p3": 476,
+      "h1": 0,
+      "h2": 0,
+      "h3": 0,
+      "bat": 0,
+      "vbat": 0,
+      "seq": 553
+    }
+  },
+  "sensor_mapping": {
+    "t1_p1": "BMP280 #1 - Unshielded",
+    "t2_p2": "BMP280 #2 - Pagoda Shield",
+    "t3_p3": "BMP280 #3 - Ground Reference"
+  },
+  "units": {
+    "temperature": "degree_Celsius",
+    "pressure": "hPa",
+    "timestamp": "ISO 8601 as exported",
+    "ts_epoch": "Unix timestamp seconds"
+  },
+  "not_recorded_in_supplied_export": [
+    "humidity measurements",
+    "battery percentage and voltage values",
+    "flight mode",
+    "UAV altitude",
+    "UAV speed",
+    "RSSI",
+    "explicit TX/RX/ACK events",
+    "packet generation timestamp",
+    "reliable experimental session identifier"
+  ],
+  "integrity_policy": {
+    "preserve_original_export": true,
+    "do_not_fabricate_measurements": true,
+    "blank_session_id_means_not_provided_by_source": true,
+    "standard_pdr_range_percent": [
+      0,
+      100
+    ]
+  }
+}

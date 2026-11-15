@@ -1,0 +1,1 @@
+session_id,mode,duration_s,tx_count,rx_unique_count,duplicate_count,lost_count,pdr_percent,packet_reduction_percent,average_rssi_dbm,average_latency_ms,average_aoi_ms,ack_count,ack_success_rate_percent,notes
