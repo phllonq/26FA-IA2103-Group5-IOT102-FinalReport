@@ -18,4 +18,3 @@ Gói dữ liệu này được tổ chức nhằm đảm bảo khả năng truy 
 - Nhật ký TX/RX/ACK ở cấp độ gói tin.
 - Tính toán AoI (Age of Information) theo phương pháp tiêu chuẩn.
 
-Các file CSV thuộc RQ2 được cố ý giữ ở dạng chỉ chứa cấu trúc schema. Không được trình bày chúng như những kết quả thực nghiệm đã được đo lường. Không có dữ liệu thực nghiệm tổng hợp hoặc tự tạo nào được bổ sung vào bộ dữ liệu.
