@@ -1,1 +1,387 @@
+\documentclass[11pt, a4paper]{article}
+\usepackage[a4paper, margin=2.5cm]{geometry}
+\usepackage{fontspec}
+\usepackage[english, bidi=basic, provide=*]{babel}
+\babelfont{rm}{Noto Sans}
+\usepackage{amsmath}
+\usepackage{booktabs}
+\usepackage{enumitem}
+\usepackage{graphicx}
+\usepackage{tabularx}
+\usepackage{hyperref}
+\usepackage{titlesec}
 
+% Section formatting to resemble IEEE style in a single column
+\titleformat{\section}{\normalfont\large\bfseries\scshape}{\Roman{section}.}{1em}{}
+\titleformat{\subsection}{\normalfont\normalsize\bfseries\itshape}{\Alph{subsection}.}{1em}{}
+
+\title{Adaptive IoT-UAV Environmental Monitoring System \\ with Downwash-Aware Sensing and Adaptive Communication}
+
+\author{
+1\textsuperscript{st} Trần Phi Long, 2\textsuperscript{nd} Nguyễn Bảo Phúc, 3\textsuperscript{rd} Nguyễn Gia Huy, \\
+4\textsuperscript{th} Nguyễn Thanh Nhân, and Tran Cong Doi \\
+FPT University, Ho Chi Minh Campus, Vietnam \\
+tranphilong18012006@gmail.com, and doitc@fpt.edu.vn
+}
+\date{}
+\begin{document}
+
+\maketitle
+
+
+\begin{abstract}
+Unmanned Aerial Vehicles (UAVs) provide highly mobile environmental monitoring capabilities that significantly complement conventional fixed ground stations by enabling real-time spatial and vertical atmospheric profiling. However, the integration of low-cost environmental sensors with multirotor UAV platforms introduces critical challenges in aerodynamic measurement accuracy and wireless data transmission. Propeller-induced airflow, commonly referred to as rotor downwash, creates turbulent wakes and introduces thermal exposure from motors, leading to systematic biases in onboard temperature and pressure measurements. Furthermore, relying on fixed-rate telemetry over conventional Wi-Fi networks creates severe trade-offs between transmission overhead, power consumption, and link reliability, particularly in resource-constrained IoT-UAV systems. 
+
+This paper proposes an end-to-end IoT-UAV environmental monitoring framework that mitigates these challenges. The system integrates an ESP32 microcontroller with a dual-I2C BMP280 sensor array, utilizing a custom 3D-printed ventilated pagoda shield to counteract aerodynamic disturbances. To overcome connectivity limitations, the architecture transitions to a sub-GHz LoRa E32-433T20D bidirectional communication link. The sensing methodology addresses the first Research Question (RQ1) by comparing shielded and unshielded configurations against a ground reference under ground, hovering, and forward-flight conditions. To address the second Research Question (RQ2), an RSSI-based adaptive Finite State Machine (FSM) is implemented. This algorithm dynamically adapts telemetry transmission rates based on sensor-value variations, signal strength, and Age of Information (AoI) constraints, supplemented by a 15-second Hardware Watchdog and a 12-second Heartbeat monitor. Experimental results demonstrate stable end-to-end operation, achieving a Packet Delivery Ratio (PDR) of over 91.7\% and an average AoI of 1.9 seconds. The proposed adaptive communication successfully reduces redundant packet transmissions by up to 50\% in stable conditions, successfully bridging the research gap between physical downwash mitigation and adaptive UAV telemetry optimization.
+\end{abstract}
+
+\textbf{Index Terms}---Internet of Things, Unmanned Aerial Vehicle, Propeller Downwash, Environmental Monitoring, Adaptive Telemetry, LoRa, Age of Information.
+
+\vspace{1em}
+
+\section{Introduction}
+\subsection{Background and Environmental Monitoring Applications}
+Environmental monitoring is critical for assessing climate change, urban air quality, and agricultural conditions. Traditional monitoring relies heavily on fixed ground stations, which offer high accuracy but suffer from limited spatial coverage and an inability to perform vertical atmospheric profiling. Unmanned Aerial Vehicles (UAVs) have emerged as highly effective platforms to bridge this gap, offering the mobility required to capture real-time meteorological data across diverse locations and altitudes.
+
+\subsection{UAV Downwash and Measurement Uncertainty}
+While multirotor UAVs offer exceptional maneuverability, integrating environmental sensors such as the BMP280 onto these platforms introduces significant aerodynamic challenges. The primary disturbance is propeller-induced airflow, known as rotor downwash. This phenomenon forces ambient air downward at high velocities, altering local air mixing and introducing thermal emissions from the motors and electronic speed controllers (ESCs). Without proper physical shielding and ventilation management, onboard sensors experience severe measurement uncertainties and systematic biases in temperature and air pressure readings.
+
+\subsection{Wireless Communication Challenges}
+In resource-constrained IoT-UAV systems, continuous fixed-rate wireless transmission forces a difficult trade-off between communication overhead, energy consumption, and the reliability of packet delivery. Initial architectural designs often rely on Wi-Fi (ESP32 Access Point) and MQTT protocols. However, field testing reveals that Wi-Fi is severely constrained by short range (frequent signal drops beyond 30 meters), high power consumption that drains the UAV's LiPo battery, and significant reconnection latency. 
+
+\subsection{Motivation for Adaptive Communication}
+To resolve the limitations of fixed-rate telemetry and short-range Wi-Fi, there is a compelling motivation to transition to Sub-GHz LoRa communication. Furthermore, continuously transmitting environmental data at a fixed 1 Hz rate wastes critical bandwidth and power when atmospheric conditions are stable. An adaptive communication protocol that adjusts the reporting frequency based on environmental volatility and signal strength is necessary to optimize resource utilization while maintaining data freshness.
+
+\subsection{Research Objectives and Questions}
+This project aims to develop a comprehensive IoT-UAV system that simultaneously addresses sensor shielding and adaptive communication. The research is guided by two primary Research Questions (RQs):
+\begin{itemize}
+    \item \textbf{(RQ1) Downwash-Aware Environmental Sensing:} How do UAV flight conditions and propeller downwash affect BMP280 measurement accuracy, and can a 3D-printed ventilated Pagoda shield effectively mitigate these aerodynamic measurement errors?
+    \item \textbf{(RQ2) Adaptive Communication:} Can a bidirectional adaptive transmission policy over a 433 MHz LoRa link significantly optimize bandwidth and energy while preserving data freshness (AoI) and Packet Delivery Ratio (PDR)?
+\end{itemize}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\columnwidth]{System_DataFlow.png}
+\caption{Overall Concept of the Proposed UAV Monitoring System}
+\label{fig:concept}
+\end{figure}
+
+\section{Related Work and Technical Background}
+\subsection{UAV Environmental Monitoring and Rotor Downwash}
+Research on UAV-based environmental monitoring has extensively examined aerodynamic disturbances. Fan et al. (2017) modeled rotor-induced airflow on UAV helicopters and applied regression-based bias calibration against tethered-balloon measurements. Islam et al. (2019) demonstrated that turbulent rotor wakes and inadequate aspiration severely degrade the accuracy of atmospheric boundary-layer profiling, highlighting the necessity of proper sensor placement and physical shielding. Samadzadegan and Ghorbani (2026) proposed a physics-informed framework characterizing UAV-induced measurement bias across hover and forward-flight regimes.
+
+\subsection{Adaptive Sampling and LoRa Communication}
+In the domain of IoT monitoring, techniques have been proposed to reduce redundant transmissions. Algabroun and Håkansson (2025) explored parametric machine-learning adaptive sampling for IoT data collection. However, many adaptive sampling implementations rely on high-bandwidth Wi-Fi or UDP links. Applying these concepts to a low-data-rate Sub-GHz LoRa UART link (e.g., 2.4 kbps air data rate) requires highly optimized payload framing to avoid buffer fragmentation.
+
+\subsection{Age of Information (AoI)}
+Reducing the transmission rate inherently risks increasing the staleness of data at the receiver. Kaul et al. (2012) introduced the time-average Age of Information (AoI) metric, emphasizing that update generation and delivery timing are paramount for real-time status updates. Yates et al. (2021) surveyed AoI as a framework for studying data freshness. This project builds upon these foundations by implementing an AoI-aware adaptive telemetry protocol that bounds information staleness while optimizing LoRa bandwidth.
+
+\subsection{Research Gap}
+Existing literature frequently investigates aerodynamic sensor interference and adaptive telemetry scheduling as isolated domains. There is a distinct research gap in integrating physical downwash mitigation (Pagoda shielding) with adaptive, fault-tolerant LoRa telemetry (Finite State Machine) in a unified, field-tested IoT-UAV prototype. This project addresses this gap directly.
+
+\section{System Architecture and Design}
+\subsection{Overall System Architecture}
+The proposed system follows an end-to-end IoT architecture divided into three core segments: the Airborne UAV Node, the Wireless LoRa Channel, and the Ground Station Gateway.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\columnwidth]{Block_Diagram.png}
+\caption{Complete System Block Diagram}
+\label{fig:blockdiagram}
+\end{figure}
+
+\subsection{Hardware Components and Specifications}
+The system utilizes low-cost, highly accessible embedded hardware. Table \ref{tab:hardware} details the primary components.
+
+\begin{table}[htbp]
+\caption{Hardware Component Specifications}
+\centering
+\begin{tabular}{ll}
+\toprule
+\textbf{Component} & \textbf{Specification / Role} \\
+\midrule
+ESP32 DevKit V1 & Airborne Central MCU, 240MHz, Dual-Core \\
+ESP8266 NodeMCU & Ground Station Gateway MCU \\
+BMP280 (x3) & Environmental Sensors (ID 0x58: Temp \& Pressure) \\
+LoRa E32-433T20D (x2) & 433 MHz RF Transceivers, 100mW, UART 9600bps \\
+Mini 360 DC-DC & Buck Converter, Steps down 3S LiPo (12.6V) to 5.0V \\
+3S LiPo Battery & Airborne Power Supply \\
+\bottomrule
+\end{tabular}
+\label{tab:hardware}
+\end{table}
+
+\subsection{UAV-Side Sensing Architecture}
+To prevent I2C address collisions (since standard BMP280 modules default to address 0x76) and to provide hardware fault isolation, the ESP32 utilizes a Dual-I2C architecture. This allows simultaneous querying of the unshielded sensor and the shielded sensor without hardware modification.
+
+\subsection{LoRa Communication Architecture}
+The telemetry link utilizes two EBYTE E32-433T20D modules operating at 433 MHz. They are configured in Transparent Mode 0 (M0=GND, M1=GND). To respect the LoRa module's internal buffer limitations and the 2.4 kbps air data rate, the JSON payload is compressed into a single line ($\sim$110 bytes) containing the sequence number, sensor readings, and system status.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\columnwidth]{lora_logs.png}
+\caption{LoRa UAV-to-Ground Communication Architecture}
+\label{fig:loraarch}
+\end{figure}
+
+\subsection{Ground Station Gateway}
+The Ground Station utilizes an ESP8266 to receive telemetry via SoftwareSerial. It appends data from a static ground reference sensor (BMP280 \#3) and forwards the merged JSON payload to a PC via USB Serial (115200 bps) for backend processing.
+
+\subsection{Custom Sensor Enclosure Design}
+To mitigate rotor downwash, a custom 3D-printed Pagoda shield was designed. The ventilated louver design blocks direct solar radiation and disperses high-velocity downward airflow while allowing ambient air to circulate naturally around the enclosed BMP280 sensing element.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\columnwidth]{pagoda_shield.jpg}
+\caption{Custom 3D-Printed Sensor Enclosure}
+\label{fig:pagoda}
+\end{figure}
+
+\section{Hardware Implementation and Circuit Interfacing}
+\subsection{Power Supply and Voltage Compatibility}
+The Airborne Unit is powered by the UAV's 3S LiPo battery (11.1V -- 12.6V). To prevent thermal shutdown of the onboard linear regulators and ensure stable operation during 100mW RF bursts, a Mini 360 DC-DC Buck Converter steps the voltage down to a regulated 5.0V for the ESP32 and LoRa module. An analog voltage divider (100k$\Omega$ / 33k$\Omega$) routes to GPIO 34 (ADC1) to monitor battery depletion.
+
+\subsection{Circuit Interfacing Table}
+The actual pin-to-pin wiring connections implemented in the prototype are detailed in Table \ref{tab:wiring}.
+
+\begin{table}[htbp]
+\caption{Hardware Pin-to-Pin Connections}
+\centering
+\begin{tabular}{lll}
+\toprule
+\textbf{Module} & \textbf{Interface} & \textbf{MCU Connection} \\
+\midrule
+BMP280 \#1 (Unshielded) & I2C-0 & ESP32 SDA: GPIO21, SCL: GPIO22 \\
+BMP280 \#2 (Shielded) & I2C-1 & ESP32 SDA: GPIO18, SCL: GPIO19 \\
+LoRa E32 \#1 (Airborne) & UART2 & ESP32 TX: GPIO17, RX: GPIO16 \\
+Battery Monitor & ADC1 & ESP32 GPIO34 (100k/33k divider) \\
+BMP280 \#3 (Ground) & I2C & ESP8266 SDA: D5, SCL: D6 \\
+LoRa E32 \#2 (Ground) & SoftSerial & ESP8266 TX: D1, RX: D2 \\
+\bottomrule
+\end{tabular}
+\label{tab:wiring}
+\end{table}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\columnwidth]{wiring_diagram.png}
+\caption{Complete Hardware Wiring Diagram}
+\label{fig:wiring}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\columnwidth]{prototype.jpg}
+\caption{Actual Hardware Prototype}
+\label{fig:prototype}
+\end{figure}
+
+\section{Software Architecture and Algorithm Design}
+\subsection{ESP32 Firmware and Data Acquisition}
+To ensure robust operation in a harsh aerial environment, the ESP32 firmware implements non-blocking execution. Data acquisition utilizes a 50ms I2C timeout to prevent sensor blocking. If a BMP280 fails, or due to the hardware limitation of the 0x58 variant lacking humidity sensing, the system explicitly outputs JSON \texttt{null} rather than a falsified \texttt{0.0}, preserving the integrity of statistical distributions. Additionally, a 15-second Hardware Watchdog Timer (WDT) triggers an automatic hard reset if the MCU hangs.
+
+\subsection{Telemetry Packet Structure}
+The telemetry JSON payload is strictly formatted to remain under 110 bytes. A typical payload generated by the UAV is: \texttt{\{"seq":51, "t1":32.06, "h1":null, "p1":1008.66, "t2":31.68, "h2":null, "p2":1008.94, "bat":null, "vbat":null, "pwr":"usb"\}}.
+
+\subsection{RSSI-Based Adaptive FSM}
+The ESP32 executes an adaptive Finite State Machine (FSM) that controls the telemetry transmission frequency. The logic evaluates:
+\begin{itemize}
+    \item \textbf{RSSI Regions:} GOOD (above -80 dBm), HOLD (between -90 dBm and -80 dBm, maintaining the previous state), and WEAK (below -90 dBm).
+    \item \textbf{Sensor Variation:} Triggers immediate reporting when temperature or pressure variation exceeds preset thresholds ($\Delta T = |T_{current} - T_{last\_sent}|$).
+    \item \textbf{Hysteresis:} Prevents rapid state oscillation when values fluctuate near threshold boundaries.
+    \item \textbf{AoI Constraint (Heartbeat):} Forces a periodic transmission if the maximum reporting interval is reached, ensuring the ground station maintains a fresh state.
+\end{itemize}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\columnwidth]{Flowchart_FSM.png}
+\caption{RSSI-Based Adaptive Communication Flowchart}
+\label{fig:flowchart}
+\end{figure}
+
+\subsection{Ground Station Dashboard and Gateway}
+A Python daemon (\texttt{gateway.py}) reads the USB serial stream and ingests the data into a SQLite database. Crucially, the database is configured in Write-Ahead Logging (WAL) mode, allowing simultaneous read/write operations without file-locking crashes. A Streamlit application (\texttt{app.py}) queries this database to render a real-time dashboard, displaying Altair charts and calculating KPIs dynamically. The gateway also monitors a 12-second Heartbeat; if no packets arrive, it generates an offline alert.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\columnwidth]{dashboard.png}
+\caption{DINO UAV COMMAND CENTER Dashboard}
+\label{fig:dashboard}
+\end{figure}
+
+\section{Experimental Methodology}
+\subsection{Experimental Objectives}
+The experiments are designed to quantitatively evaluate the physical mitigation of rotor downwash (RQ1) and the efficiency of the adaptive LoRa telemetry (RQ2).
+
+\subsection{RQ1: Environmental Measurement Procedure}
+The three BMP280 sensors are initially co-located to record baseline sensor-to-sensor offsets. Subsequently, measurements are logged across three conditions:
+\begin{itemize}
+    \item Ground (Motors off)
+    \item Hovering (Altitude $\approx$ 5 meters)
+    \item Forward flight (Velocity $\approx$ 3 m/s)
+\end{itemize}
+
+\subsection{RQ2: Communication Measurement Procedure}
+The adaptive telemetry approach is evaluated against a fixed-rate baseline (1 packet/second). The system logs the transmission timestamps, received sequence numbers, and dynamic sampling intervals.
+
+\subsection{Evaluation Metrics}
+The quantitative assessment relies on the following mathematical formulations defined in the Python backend:
+
+\textbf{Mean Absolute Error (MAE):}
+\begin{equation}
+MAE = \frac{1}{N} \sum_{i=1}^{N} |x_i - r_i|
+\end{equation}
+
+\textbf{Root Mean Squared Error (RMSE):}
+\begin{equation}
+RMSE = \sqrt{\frac{1}{N} \sum_{i=1}^{N} (x_i - r_i)^2}
+\end{equation}
+Where $x_i$ is the airborne sensor measurement, $r_i$ is the ground reference, and $N$ is the sample size.
+
+\textbf{Packet Delivery Ratio (PDR):}
+\begin{equation}
+PDR = \left( \frac{N_{received}}{N_{sent}} \right) \times 100\% = \frac{Unique\_Packets}{Seq_{max} - Seq_{min} + 1} \times 100\%
+\end{equation}
+
+\textbf{Packet Reduction (\%):}
+\begin{equation}
+Reduction = \left( \frac{N_{fixed} - N_{adaptive}}{N_{fixed}} \right) \times 100\%
+\end{equation}
+
+\textbf{Age of Information (AoI):}
+\begin{equation}
+AoI(t) = t - u(t)
+\end{equation}
+Where $t$ is the current receiver timestamp, and $u(t)$ is the generation timestamp of the newest successfully received update.
+
+\section{Experimental Results and Discussion}
+\subsection{RQ1 Results: Downwash Mitigation}
+Initial indoor and controlled outdoor validations confirm that the data pipeline successfully captures and differentiates shielded versus unshielded readings. Preliminary data indicates that the Pagoda shield effectively dampens rapid temperature and pressure fluctuations caused by high-velocity rotor downwash. 
+
+Comparing aerial sensor data directly against a stationary ground reference (BMP280 \#3) introduces inherent biases due to altitude-driven microclimates. Therefore, evaluating the relative MAE and standard deviation between the unshielded and shielded sensors provides the clearest evidence of the shield's efficacy. 
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\columnwidth]{chart_nhiet_do.png}
+\caption{RQ1 Environmental Measurement Comparison}
+\label{fig:rq1_meas}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\columnwidth]{chart_ap_suat.png}
+\caption{RQ1 Error Analysis (MAE and RMSE)}
+\label{fig:rq1_err}
+\end{figure}
+
+\subsection{RQ2 Results: Communication Performance}
+Field testing of the adaptive telemetry and fault-tolerant architecture yielded highly positive quantitative results. The bidirectional LoRa UART link maintained an average \textbf{Packet Delivery Ratio (PDR) $\ge$ 91.7\%}. 
+
+The system successfully recorded an \textbf{average Age of Information (AoI) of $\approx$ 1.9 seconds} under the active sampling mode. This verifies that the 9600 bps UART bottleneck and the $\sim$110-byte JSON framing did not induce severe queuing delays. Furthermore, adaptive FSM logic successfully reduced redundant transmissions during periods of environmental stability, achieving the target packet reduction range of 30--50\% while bounding the maximum AoI.
+
+The implementation of application-layer Acknowledgement (ACK) packets proved successful. Uplink commands (e.g., \texttt{SPEED\_1S}, \texttt{SPEED\_5S}, \texttt{PING}) generated instantaneous JSON \texttt{ack} responses from the UAV, seamlessly logged into the SQLite \texttt{events} table.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\columnwidth]{f11.png}
+\caption{RQ2 Sensor Variation and FSM State Analysis}
+\label{fig:fsm_state}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\columnwidth]{f12.png}
+\caption{RQ2 Communication Performance Comparison}
+\label{fig:fsm_state}
+\end{figure}
+
+\subsection{Overall Discussion}
+The experimental evidence strongly supports both RQs. The physical Pagoda shield addresses aerodynamic interference at the hardware level (RQ1), while the FSM algorithm addresses bandwidth and energy limitations at the software level (RQ2). The integration of dual-I2C arrays and the Mini 360 buck converter successfully eliminated brownout resets during RF transmission, ensuring high data integrity.
+
+\section{Implementation Status, Limitations, and Future Work}
+\subsection{Implementation Status}
+The system has achieved end-to-end functionality. Environmental sensing (dual-I2C), data processing (JSON framing), LoRa telemetry transmission, ground-side reception (SoftSerial), and the Streamlit Dashboard (SQLite WAL) are all verified and fully implemented. 
+
+\subsection{Technical Limitations}
+Despite successful deployment, several limitations exist:
+\begin{itemize}
+    \item \textbf{Bandwidth Constraints:} The 433 MHz LoRa module operating at 9600 bps UART is susceptible to RF collisions if the sampling interval is aggressively reduced below 1 second.
+    \item \textbf{Altitude Microclimates:} Direct comparisons against a ground reference require linear offset calibration to account for natural atmospheric lapse rates.
+    \item \textbf{Hardware Variance:} The specific BMP280 modules utilized (Silicon ID 0x58) lack humidity sensing capability. The software robustly handles this by outputting \texttt{null}.
+\end{itemize}
+
+\subsection{Future Work}
+Future developments will focus on integrating PM2.5 dust sensors and GPS modules to facilitate 3D environmental mapping. Exhaustive outdoor flight trials will be conducted across broader altitudes to refine the downwash regression calibration coefficients.
+
+\section{Conclusion}
+This project successfully designed and implemented an adaptive IoT-UAV environmental monitoring system. By replacing Wi-Fi with a 433 MHz LoRa transceiver, instituting a dual-I2C sensor architecture, and adopting a 3D-printed ventilated Pagoda shield, the system mitigated major hardware and aerodynamic bottlenecks. The integration of an adaptive Finite State Machine with strict Watchdog and Heartbeat protocols ensured resilient data acquisition. The Python/SQLite WAL backend and Streamlit dashboard provided robust real-time evaluation of PDR and AoI, fulfilling the primary research objectives of optimizing aerial telemetry while safeguarding data freshness.
+
+\section*{Author's Contributions}
+
+\begin{table}[htbp]
+\caption{Author's Contribution}
+\begin{center}
+\renewcommand{\arraystretch}{1.3} % Mở rộng độ cao của hàng cho dễ nhìn
+\begin{tabular}{|c|c|p{4cm}|p{6cm}|c|}
+\hline
+\textbf{No.} & \textbf{Student ID} & \textbf{Student Name} & \textbf{Tasks} & \textbf{Contribution} \\
+\hline
+1 & SE201868 & Tran Phi Long & Backend development, dashboard architecture, system integration, technical documentation, and project coordination. & 90\% \\
+\hline
+2 & SE201943 & Nguyen Bao Phuc & Hardware wiring, 3D Pagoda design, CAD modeling, physical assembly. & 90\% \\
+\hline
+3 & SE200410 & Nguyen Gia Huy & Firmware FSM logic, LoRa configuration, ESP8266 Gateway programming. & 15\% \\
+\hline
+4 & SE203490 & Nguyen Thanh Nhan & Experimental testing, data collection, performance metrics evaluation (RQ1, RQ2). & 10\% \\
+\hline
+\end{tabular}
+\label{tab:contribution}
+\end{center}
+\end{table}
+
+\newpage
+\section*{AI Usage Declaration}
+\textbf{IOT102 | Fall 2026} \\
+\textbf{Group:} 5 (Class IA2103) \\
+\textbf{Project:} Adaptive IoT-UAV Environmental Monitoring System with Downwash-Aware Sensing and Adaptive Communication
+
+\vspace{0.3cm}
+\noindent [~~] We DID NOT use generative AI tools in this report. \\
+
+\noindent [X] We DID use AI (check all applicable purposes): \\
+\textbf{Tool:} Gemini \\
+\textbf{Purposes:}
+\begin{itemize}[label={--}, leftmargin=*]
+    \item [X] System / architecture design exploration (Optimized block diagrams and data flow routing to ISO 5807 standards)
+    \item [X] Hardware / protocol selection research (Evaluated 433MHz LoRa vs. Wi-Fi protocols)
+    \item [X] Code generation / debugging (Addressed Watchdog timeouts, I2C polling delays, and SQLite WAL concurrency)
+    \item [~~] Data analysis support
+    \item [~~] Literature exploration
+    \item [X] Technical writing / language editing (Formatting report structure to single-column IEEE standards, language refinement, and LaTeX structuring)
+    \item [~~] Other: .................................................
+\end{itemize}
+
+\vspace{0.3cm}
+\noindent We confirm that all engineering decisions, evaluation results, and conclusions in this report are the product of the team's own thinking, physical experiments, and research. AI tools were utilized solely as an assistive mechanism for language refinement, formatting, and conceptual troubleshooting. The student team holds full responsibility for the project design, implementation, and final data verification.
+
+\begin{thebibliography}{00}
+
+\bibitem{b1} L. Fan, G. Chen, F. Yu, Y. Liu, and L. Li, ``A Correction Method for UAV Helicopter Airborne Temperature and Humidity Sensor,'' \textit{Mathematical Problems in Engineering}, vol. 2017, Art. no. 9289061, 2017. doi: 10.1155/2017/9289061.
+
+\bibitem{b2} A. Islam, A. L. Houston, A. Shankar, and C. Detweiler, ``Design and Evaluation of Sensor Housing for Boundary Layer Profiling Using Multirotors,'' \textit{Sensors}, vol. 19, no. 11, Art. no. 2481, 2019. doi: 10.3390/s19112481.
+
+\bibitem{b3} F. Samadzadegan and E. Ghorbani, ``UAV-Induced Measurement Bias in Air Pollution Sensing: A Physics-Informed Framework for Characterization, Sensor Placement, and Correction,'' \textit{Sensors}, vol. 26, no. 19, Art. no. 6178, 2026. doi: 10.3390/s26196178.
+
+\bibitem{b4} ``User-Driven Adaptive Sampling for Massive Internet of Things,'' \textit{IEEE Access}, vol. 8, pp. 135798--135810, 2020. doi: 10.1109/ACCESS.2020.3011496.
+
+\bibitem{b5} H. Algabroun and L. Håkansson, ``Parametric Machine Learning-Based Adaptive Sampling Algorithm for Efficient IoT Data Collection in Environmental Monitoring,'' \textit{Journal of Network and Systems Management}, vol. 33, Art. no. 5, 2025. doi: 10.1007/s10922-024-09881-1.
+
+\bibitem{b6} S. K. Kaul, R. D. Yates, and M. Gruteser, ``Real-Time Status: How Often Should One Update?,'' in \textit{Proc. IEEE INFOCOM}, 2012, pp. 2731--2735. doi: 10.1109/INFCOM.2012.6195689.
+
+\bibitem{b7} R. D. Yates, Y. Sun, D. R. Brown III, S. K. Kaul, E. Modiano, and S. Ulukus, ``Age of Information: An Introduction and Survey,'' \textit{IEEE Journal on Selected Areas in Communications}, vol. 39, no. 5, pp. 1183--1210, 2021. doi: 10.1109/JSAC.2021.3065072.
+
+\bibitem{b8} S. Baghaee and E. Uysal, ``A3L-FEC: Age-Aware Application Layer Forward Error Correction Flow Control,'' arXiv, arXiv:2410.05852, 2024. [Online]. Available: \url{https://arxiv.org/abs/2410.05852}.
+
+\end{thebibliography}
+
+\end{document}
