@@ -1,259 +1,31 @@
-# ADR-001 — UAV Communication Architecture
-
-**Project:** UAV Environmental Monitoring System  
-**Course:** IOT102 — Fall 2026  
-**Document ID:** ADR-001  
-**Version:** 1.1  
-**Decision Date:** [NOT VERIFIED — draft records 2026-09-22; confirm against primary team records]  
-**Status:** DRAFT — ACCEPTANCE IN PRINCIPLE PENDING VERIFICATION OF TEAM RECORDS  
-**Implementation Status:** NOT IMPLEMENTED  
-**Decision Authority:** [TO BE VERIFIED FROM ACTUAL TEAM RECORDS]  
-
----
-
-## 1. Context
-
-The project aims to develop a UAV-based environmental monitoring system using an ESP32 microcontroller and environmental sensors.
-
-The planned sensor configuration includes:
-
-- **DHT22:** Temperature and humidity measurement.
-- **MQ-2:** Relative gas/smoke indication.
-- **YL-83 / FC-37:** Rain or surface wetness detection.
-
-The planned communication and monitoring components include:
-
-- ESP32 Wi-Fi connectivity.
-- MQTT messaging protocol.
-- Mosquitto MQTT broker.
-- MQTT Explorer or a monitoring dashboard.
-- PlatformIO for firmware development.
-
-The team is currently in the research, component selection, and system design stage. Hardware integration, communication performance testing, and UAV flight testing have not been confirmed as completed.
-
-The team evaluated direct Wi-Fi + MQTT and an alternative architecture using ESP-NOW or LoRa with an additional receiver or gateway.
-
-The purpose of this ADR is to record the team's communication architecture decision and distinguish it from unresolved engineering questions.
-
-## 2. Decision
-
-The current project draft records direct Wi-Fi + MQTT as the proposed communication architecture for the initial prototype. The date and supporting team approval record have not been independently verified; confirm them against primary team records before treating this as an official decision.
-
-The proposed communication flow is:
-
-```text
-Environmental Sensors
-        |
-        v
-      ESP32
-        |
-        v
-   Wi-Fi Network
-        |
-        v
- Mosquitto MQTT Broker
-        |
-        v
- MQTT Explorer / Dashboard
-```
-
-The ESP32 is intended to collect sensor readings, process the relevant data, and publish telemetry through MQTT over Wi-Fi.
-
-The Mosquitto broker is intended to receive and distribute MQTT messages to a monitoring client.
-
-This decision applies to the initial prototype only. It does not establish that the system has achieved reliable wireless communication during UAV flight.
-
-## 3. Decision Rationale
-
-The team accepted this architecture in principle for the following reasons.
-
-### 3.1 Reduced Initial Complexity
-
-Direct Wi-Fi avoids the need to develop an additional ESP-NOW or LoRa receiver gateway for the initial prototype.
-
-### 3.2 Compatibility with ESP32
-
-The ESP32 provides integrated Wi-Fi connectivity, making it suitable for exploring direct wireless telemetry.
-
-### 3.3 MQTT Integration
-
-MQTT supports a publisher-broker-subscriber communication model. The planned Mosquitto broker and MQTT Explorer workflow can be used to inspect messages during development.
-
-### 3.4 Incremental Development
-
-The communication pipeline can be developed and evaluated through bench testing before integration with the UAV platform.
-
-These reasons represent architectural considerations. They are not experimentally verified performance results.
-
-## 4. Alternatives Considered
-
-### Alternative A — Direct Wi-Fi + MQTT
-
-**Status:** PROPOSED FOR THE INITIAL PROTOTYPE — TEAM ACCEPTANCE NOT VERIFIED
-
-Proposed flow:
-
-ESP32 → Wi-Fi Access Point → Mosquitto Broker → MQTT Explorer / Dashboard
-
-**Potential advantages:**
-
-- Relatively simple initial architecture.
-- Uses the ESP32's integrated Wi-Fi capability.
-- Compatible with the planned MQTT monitoring tools.
-- Does not require a dedicated wireless receiver gateway.
-- Allows communication testing independently of UAV flight.
-
-**Limitations and risks:**
-
-- Communication depends on Wi-Fi coverage and network availability.
-- Interference, obstructions, and signal attenuation may affect connectivity.
-- Packet loss, latency, and reconnection behavior have not been measured.
-- Reliable communication during flight has not been demonstrated.
-
-### Alternative B — ESP-NOW or LoRa with a Gateway
-
-**Status:** NOT SELECTED FOR THE INITIAL PROTOTYPE
-
-Proposed flow:
-
-ESP32 → ESP-NOW / LoRa Receiver → Gateway → MQTT Broker → Monitoring Interface
-
-**Potential advantages:**
-
-- Provides alternative communication options for different operational requirements.
-- LoRa may be appropriate for certain low-data-rate, longer-range applications.
-- ESP-NOW can support direct communication between compatible devices without a conventional Wi-Fi access point.
-
-**Limitations and risks:**
-
-- A receiver or gateway may be required.
-- Additional hardware and integration work may increase complexity.
-- Actual range, reliability, latency, and power consumption depend on the selected implementation and operating environment.
-
-The team may reconsider this alternative if future testing shows that direct Wi-Fi + MQTT does not meet the project's operational requirements.
-
-No experimental comparison between these alternatives has been completed.
-
-## 5. Consequences of the Decision
-
-### 5.1 Expected Benefits
-
-- The initial communication architecture remains relatively simple.
-- The team can test sensor data transmission and MQTT message reception in stages.
-- A dedicated LoRa or ESP-NOW gateway is not required for the initial design.
-- The architecture is compatible with the proposed Mosquitto and MQTT Explorer workflow.
-
-### 5.2 Trade-offs
-
-- The system depends on a reachable Wi-Fi network and MQTT broker.
-- Wireless coverage and stability must be evaluated.
-- Reconnection behavior and message handling require further design.
-- Communication performance during UAV movement remains unknown.
-- Power consumption must be considered alongside sensor and UAV power requirements.
-
-## 6. Decisions and Open Issues
-
-The current draft proposes direct Wi-Fi + MQTT for the prototype. Whether the team accepted it in principle remains unverified until supporting team approval evidence is checked. The following engineering issues remain unresolved.
-
-| ID | Issue | Status |
-|---|---|---|
-| PD-01 | Exact ESP32 board model and GPIO assignments | PENDING |
-| PD-02 | UAV frame, payload capacity, and mounting arrangement | PENDING |
-| PD-03 | Main battery with regulator versus auxiliary battery | PENDING |
-| PD-04 | MQ-2 analog output conditioning and ADC protection | PENDING |
-| PD-05 | Sensor polling intervals | PENDING |
-| PD-06 | FSM states, transition logic, and thresholds | PENDING |
-| PD-07 | MQTT publishing interval, QoS, and message schema | PENDING |
-| PD-08 | Wi-Fi reconnection and temporary network-loss handling | PENDING |
-| PD-09 | MQTT broker deployment and ground-station network | PENDING |
-| PD-10 | GPS and microSD inclusion | PENDING |
-| PD-11 | Communication acceptance criteria for UAV operation | PENDING |
-
-The proposed separation of sensor polling, FSM evaluation, and MQTT publishing is a design recommendation that still requires team approval.
-
-Specific sampling rates, warning thresholds, and MQTT settings must not be treated as finalized decisions until reviewed and documented by the team.
-
-## 7. Planned Verification
-
-The following activities are planned for future implementation and testing. They have not been recorded as completed.
-
-### Test 1 — Wi-Fi Connectivity
-
-Connect the selected ESP32 board to the intended Wi-Fi network and record the connection result.
-
-### Test 2 — MQTT Message Transmission
-
-Configure the ESP32 to publish a test message to the Mosquitto broker.
-
-### Test 3 — Message Reception
-
-Use MQTT Explorer or an equivalent client to verify whether the test message is received.
-
-### Test 4 — Reconnection Behavior
-
-Interrupt Wi-Fi connectivity under controlled conditions and evaluate whether the ESP32 can reconnect and resume publishing.
-
-### Test 5 — Communication Performance
-
-Define a test procedure to measure message delivery, latency, and disconnection behavior under specified conditions.
-
-### Test 6 — UAV Environment Evaluation
-
-After bench testing and appropriate safety checks, evaluate whether the communication architecture meets the project's requirements in the intended operating environment.
-
-Numerical acceptance thresholds must be established before the tests are conducted.
-
-No successful test outcomes are claimed in this ADR.
-
-## 8. Reconsideration Criteria
-
-The team should reconsider the architecture if future evidence indicates that direct Wi-Fi + MQTT cannot satisfy the project's requirements for:
-
-- Communication coverage.
-- Message delivery reliability.
-- Latency.
-- Reconnection behavior.
-- Power consumption.
-- Operational safety.
-
-Any change should be documented in a revised ADR, including the evidence supporting the change and the team's approval.
-
-## 9. Evidence and Traceability
-
-The decision is associated with the following AI Audit Log evidence files:
-
-- [EV-001 — Gemini Architecture Analysis Prompt](../Evidence/Entry-001/EV-001-Gemini-Prompt.md)
-- [EV-002 — Gemini Initial Architecture Response](../Evidence/Entry-001/EV-002-Gemini-Response.md)
-- [EV-003 — ChatGPT Technical Critique](../Evidence/Entry-001/EV-003-ChatGPT-Review.md)
-- [EV-004 — Gemini Technical Self-Review](../Evidence/Entry-001/EV-004-Gemini-Self-Review.md)
-- [EV-005 — Team Engineering Decision](../Evidence/Entry-001/EV-005-Team-Decision.md)
-
-These files currently contain structured records and summaries. Original prompts and AI responses should be preserved separately or inserted as verbatim transcripts where required.
-
-## 10. Limitations
-
-This ADR records an architectural decision, not a completed implementation.
-
-The following claims are not established by this document:
-
-- Successful hardware integration.
-- Verified sensor accuracy.
-- Confirmed communication range.
-- Measured packet delivery ratio.
-- Measured communication latency.
-- Verified UAV flight reliability.
-- Completed flight testing.
-
-AI-generated recommendations were used as inputs to the engineering review. The team remains responsible for verifying technical claims and approving subsequent implementation decisions.
-
-## 11. Final Decision Statement
-
-The current draft proposes **direct Wi-Fi + MQTT for the initial UAV environmental monitoring prototype**. The decision date and formal team approval have not been independently verified against primary records.
-
-The choice is intended to support a relatively simple initial development workflow using ESP32, Wi-Fi, Mosquitto, and MQTT monitoring tools.
-
-Operational communication reliability remains unverified. The architecture must be evaluated through future implementation and testing before any claim of reliable UAV communication can be made.
-
-**Final Status:** DRAFT — TEAM ACCEPTANCE NOT VERIFIED  
-**Implementation Status:** NOT IMPLEMENTED  
-**Verification Status:** PENDING
+# ADR-001: Chuyển đổi kiến trúc truyền thông từ Wi-Fi sang LoRa 433 MHz
+
+## 1. Trạng thái (Status)
+**Đã phê duyệt (Accepted)** - Đã triển khai thực tế trên cả 2 trạm UAV (ESP32) và Mặt đất (ESP8266).
+
+## 2. Bối cảnh (Context)
+Trong thiết kế ban đầu, nhóm dự định sử dụng ESP32 trên UAV phát Wi-Fi (chế độ Access Point) hoặc kết nối qua MQTT Broker để truyền dữ liệu. Tuy nhiên, quá trình đánh giá và thử nghiệm thực tế bộc lộ 3 vấn đề lớn với hệ sinh thái UAV:
+- **Tầm xa hạn chế:** Sóng Wi-Fi 2.4GHz của mạch ESP32 rất chập chờn và dễ rớt mạng khi UAV cất cánh cách xa trạm mặt đất trên 30 mét.
+- **Tiêu thụ năng lượng (Power Consumption):** Việc liên tục duy trì module Wi-Fi ngốn dòng rất lớn, làm sụt áp hệ thống và hao pin LiPo của UAV nhanh chóng.
+- **Độ trễ phục hồi (Reconnection Latency):** Khi rớt mạng, giao thức TCP/IP mất nhiều thời gian để bắt tay (handshake) và cấp lại IP, làm gián đoạn nghiêm trọng dữ liệu thời gian thực.
+
+## 3. Quyết định (Decision)
+Loại bỏ hoàn toàn kết nối Wi-Fi, chuyển sang sử dụng **sóng vô tuyến LoRa Sub-GHz (Module EBYTE E32-433T20D)** cho liên kết từ xa (Telemetry).
+- **Tần số:** 433 MHz (Xuyên vật cản tốt, ít nhiễu với sóng điều khiển 2.4GHz của UAV).
+- **Giao tiếp MCU:** UART (9600 bps, 8N1).
+- **Chế độ hoạt động:** Truyền trong suốt (Transparent Mode 0 - Chân M0=M1=GND).
+
+## 4. Các phương án thay thế đã xem xét (Alternatives Considered)
+- **Wi-Fi (ESP32 AP / MQTT):** Bị loại do tầm ngắn, tốn pin và overhead của giao thức TCP/IP quá lớn so với lượng dữ liệu nhỏ của cảm biến.
+- **NRF24L01 (2.4 GHz):** Bị loại vì dùng chung băng tần 2.4 GHz với remote điều khiển của drone, dễ gây nhiễu chéo; khả năng truyền xa kém hơn tần số 433 MHz.
+- **LoRa SX1278 (Giao tiếp SPI):** Bị loại vì thư viện giao tiếp SPI phức tạp, chiếm dụng nhiều chân GPIO của ESP32 hơn so với chuẩn giao tiếp Serial (UART) đơn giản của module E32.
+
+## 5. Hệ quả (Consequences)
+### Tích cực (Pros):
+- **Khoảng cách:** Tăng đáng kể tầm xa liên lạc và độ ổn định tín hiệu.
+- **Năng lượng:** Tiết kiệm điện năng so với phát Wi-Fi liên tục.
+- **Tính linh hoạt:** Giao tiếp qua Serial giúp nhóm dễ dàng lập trình thêm cơ chế "điều khiển chu kỳ thích ứng" và thuật toán gửi gói xác nhận (ACK) hai chiều ở tầng ứng dụng.
+
+### Hạn chế & Giải pháp khắc phục (Cons & Mitigations):
+- **Hạn chế - Băng thông hẹp:** Tốc độ UART 9600 bps và đặc thù sóng LoRa không cho phép truyền dữ liệu liên tục ở tốc độ quá cao (gây nghẽn hoặc xung đột RF).
+- **Giải pháp (Mitigation):** Nhóm phải tối ưu hóa Data Payload. Cụ thể, dữ liệu từ 3 kênh nhiệt độ/áp suất và điện áp pin được gom gọn thành một chuỗi JSON 1 dòng duy nhất (~110 bytes), cắt bỏ toàn bộ khoảng trắng thừa để truyền đi nhanh nhất.
