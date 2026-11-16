@@ -32,9 +32,16 @@ const float BAT_PRESENT_MIN_V = 6.0;  // dưới mức này coi như chưa gắn
 
 // ---------------- CẤU HÌNH HỆ THỐNG ----------------
 #define WDT_TIMEOUT 15                 // Watchdog (giây)
-unsigned long readInterval = 5000;     // Chu kỳ đọc/gửi mặc định (ms)
-unsigned long lastReadTime = 0;
+
 uint32_t seqNo = 0;
+uint32_t txAttemptCount = 0;
+
+unsigned long readInterval = 5000;          // Chu kỳ đọc/gửi mặc định (ms)
+unsigned long lastReadTime = 0;
+
+// RQ2 experiment metadata
+const char* RUN_ID = "RQ2_TEST_001";
+String bootId;
 
 // Bộ đệm nhận lệnh (không chặn)
 #define CMD_BUF_SIZE 32
@@ -130,6 +137,12 @@ int batteryPercent(float vPack);
 
 void setup() {
   Serial.begin(115200);
+  bootId = String((uint32_t)ESP.getEfuseMac(), HEX)
+         + "_" + String(millis());
+
+  Serial.println("[RQ2] UAV BOOT");
+  Serial.println("[RQ2] RUN_ID: " + String(RUN_ID));
+  Serial.println("[RQ2] BOOT_ID: " + bootId);
   Serial.println("Dang khoi dong Tram UAV...");
 
   // LoRa E32 (9600)
@@ -216,7 +229,19 @@ void sendSensorData() {
 
   // Đóng gói JSON: cảm biến lỗi -> null (Streamlit nhận biết được)
   JsonDocument doc;
+
+  doc["run_id"] = RUN_ID;
+  doc["boot_id"] = bootId;
   doc["seq"] = seqNo++;
+  doc["uptime_ms"] = millis();
+  doc["interval_ms"] = readInterval;
+
+  // Hiện tại điều khiển thủ công, không phải RSSI adaptive
+  doc["mode"] = "MANUAL";
+
+
+
+  
   if (isnan(t1)) doc["t1"] = nullptr; else doc["t1"] = round2(t1);
   if (isnan(h1)) doc["h1"] = nullptr; else doc["h1"] = round2(h1);
   if (isnan(p1)) doc["p1"] = nullptr; else doc["p1"] = round2(p1);
@@ -239,7 +264,22 @@ void sendSensorData() {
   serializeJson(doc, payload);
 
   Serial.println("[UAV TEST] Sending test packet to Ground...");
+
+  txAttemptCount++;
+  
   Serial2.println(payload);               // phát qua LoRa
+
+  // Log cục bộ: đây là TX attempt, không phải xác nhận RF thành công
+  Serial.printf(
+    "[RQ2_TX_ATTEMPT] run=%s boot=%s seq=%lu uptime_ms=%lu interval_ms=%lu count=%lu\n",
+    RUN_ID,
+    bootId.c_str(),
+    (unsigned long)(seqNo - 1),
+    (unsigned long)millis(),
+    readInterval,
+    (unsigned long)txAttemptCount
+);
+  
   Serial.println("[UAV TEST] Test packet sent.");
   Serial.print("UAV TX: ");
   Serial.println(payload);
