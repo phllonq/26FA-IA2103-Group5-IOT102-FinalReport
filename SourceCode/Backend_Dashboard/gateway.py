@@ -144,58 +144,58 @@ class Gateway:
             self._db.commit()
 
     def _insert_packet_log(self, msg):
-      run_id = msg.get("run_id")
-      boot_id = msg.get("boot_id")
-      seq = msg.get("seq")
+        run_id = msg.get("run_id")
+        boot_id = msg.get("boot_id")
+        seq = msg.get("seq")
 
-    # Không ghi packet log nếu thiếu định danh hoặc sequence.
-    if not run_id or not boot_id or seq is None:
-        return
+        # Không ghi packet log nếu thiếu định danh hoặc sequence.
+        if not run_id or not boot_id or seq is None:
+            return
 
-    try:
-        seq = int(seq)
-        tx_uptime_ms = int(msg["uptime_ms"])
-        rx_uptime_ms = int(msg["rx_uptime_ms"])
-        interval_ms = int(msg["interval_ms"])
-    except (KeyError, TypeError, ValueError):
-        self._event(
-            "packet_log_invalid",
-            f"run_id={run_id}, boot_id={boot_id}, seq={seq}"
-        )
-        return
-
-    now = time.time()
-
-    with self._db_lock:
-        self._db.execute(
-            """
-            INSERT INTO packet_logs (
-                run_id,
-                boot_id,
-                seq,
-                tx_uptime_ms,
-                rx_uptime_ms,
-                rx_time_epoch,
-                interval_ms,
-                mode,
-                rssi_dbm,
-                packet_status
+        try:
+            seq = int(seq)
+            tx_uptime_ms = int(msg["uptime_ms"])
+            rx_uptime_ms = int(msg["rx_uptime_ms"])
+            interval_ms = int(msg["interval_ms"])
+        except (KeyError, TypeError, ValueError):
+            self._event(
+                "packet_log_invalid",
+                f"run_id={run_id}, boot_id={boot_id}, seq={seq}"
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, NULL, ?)
-            """,
-            (
-                str(run_id),
-                str(boot_id),
-                seq,
-                tx_uptime_ms,
-                rx_uptime_ms,
-                now,
-                interval_ms,
-                str(msg.get("mode", "UNKNOWN")),
-                "RX_VALID",
-            ),
-        )
-        self._db.commit()
+            return
+
+        now = time.time()
+
+        with self._db_lock:
+            self._db.execute(
+                """
+                INSERT INTO packet_logs (
+                    run_id,
+                    boot_id,
+                    seq,
+                    tx_uptime_ms,
+                    rx_uptime_ms,
+                    rx_time_epoch,
+                    interval_ms,
+                    mode,
+                    rssi_dbm,
+                    packet_status
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, NULL, ?)
+                """,
+                (
+                    str(run_id),
+                    str(boot_id),
+                    seq,
+                    tx_uptime_ms,
+                    rx_uptime_ms,
+                    now,
+                    interval_ms,
+                    str(msg.get("mode", "UNKNOWN")),
+                    "RX_VALID",
+                ),
+            )
+            self._db.commit()
 
     # ---------------- XỬ LÝ MỘT DÒNG ----------------
     def handle_line(self, line):
