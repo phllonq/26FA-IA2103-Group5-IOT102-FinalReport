@@ -4,7 +4,7 @@
 
 - **Entry ID:** ENTRY-001
 - **Evidence ID:** EV-001
-- **Date and time:** Week 4 (exact date/time not recorded in the supplied AI Audit Log)
+- **Date and time:** Week 4 (28/09/2026 not recorded in the supplied AI Audit Log)
 - **AI tool and model:** NOT VERIFIED
 - **Human operator:** NOT VERIFIED (the source identifies Group 5, Class IA2103, not the individual operator)
 - **Interaction type:** PROMPT / RESPONSE / REVIEW / DECISION (interaction details reconstructed from the audit summary)
