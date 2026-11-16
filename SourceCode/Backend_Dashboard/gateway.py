@@ -144,9 +144,9 @@ class Gateway:
             self._db.commit()
 
     def _insert_packet_log(self, msg):
-    run_id = msg.get("run_id")
-    boot_id = msg.get("boot_id")
-    seq = msg.get("seq")
+      run_id = msg.get("run_id")
+      boot_id = msg.get("boot_id")
+      seq = msg.get("seq")
 
     # Không ghi packet log nếu thiếu định danh hoặc sequence.
     if not run_id or not boot_id or seq is None:
