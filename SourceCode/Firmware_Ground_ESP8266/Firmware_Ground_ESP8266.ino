@@ -1,122 +1,196 @@
+
 #include <Wire.h>
 #include <SoftwareSerial.h>
 #include <Adafruit_Sensor.h>
 #include <Adafruit_BME280.h>
-#include <Adafruit_BMP280.h>   // dùng khi module thực chất là BMP280
-#include <ArduinoJson.h>        // ArduinoJson v7
+#include <Adafruit_BMP280.h>
+#include <ArduinoJson.h>
 
-// ---------------- CẤU HÌNH CHÂN PHẦN CỨNG (ESP8266) ----------------
+// ============================================================
+// 1. CAU HINH CHAN ESP8266 NODEMCU
+// ============================================================
 
-// I2C cho BME280 số 3 (Ground Reference): D5 (GPIO14) = SCL, D6 (GPIO12) = SDA
-#define I2C_SCL D6
+// BMP280/BME280 Ground Reference:
+// D5 (GPIO14) = SDA
+// D6 (GPIO12) = SCL
 #define I2C_SDA D5
+#define I2C_SCL D6
 
-// SoftwareSerial cho LoRa E32
-// D2 (GPIO4) <- TXD của LoRa (Soft RX) ; D1 (GPIO5) -> RXD của LoRa (Soft TX)
+// LoRa E32:
+// D2 (GPIO4) = RX cua ESP8266 <- TXD LoRa
+// D1 (GPIO5) = TX cua ESP8266 -> RXD LoRa
 #define LORA_RX D2
 #define LORA_TX D1
 
 SoftwareSerial loraSerial(LORA_RX, LORA_TX);
-// ---------------- CẢM BIẾN MÔI TRƯỜNG: tự nhận BME280 / BMP280 ----------------
-// Đọc mã chip (thanh ghi 0xD0): 0x60 = BME280 (có độ ẩm), 0x56/0x57/0x58 = BMP280 (KHÔNG có độ ẩm -> h = NAN).
-// Khai báo trước mọi hàm của sketch (Arduino tự sinh prototype hàm lên đầu file).
+
+// ============================================================
+// 2. CAM BIEN BME280 / BMP280 TU NHAN DIEN
+// ============================================================
+
 class EnvSensor {
- public:
-  enum Type : uint8_t { NONE = 0, BME = 1, BMP = 2 };
+public:
+  enum Type : uint8_t {
+    NONE = 0,
+    BME = 1,
+    BMP = 2
+  };
 
-  explicit EnvSensor(TwoWire &bus) : _bus(&bus), _bmp(&bus) {}
+  explicit EnvSensor(TwoWire &bus)
+    : _bus(&bus), _bmp(&bus) {}
 
-  bool ok() const { return _type != NONE; }
-  bool hasHumidity() const { return _type == BME; }
-  const char *name() const { return _type == BME ? "BME280" : (_type == BMP ? "BMP280 (khong co do am)" : "KHONG THAY"); }
+  bool ok() const {
+    return _type != NONE;
+  }
+
+  bool hasHumidity() const {
+    return _type == BME;
+  }
+
+  const char *name() const {
+    if (_type == BME) return "BME280";
+    if (_type == BMP) return "BMP280";
+    return "KHONG THAY";
+  }
 
   bool begin() {
     _type = NONE;
+
     const uint8_t addrs[2] = {0x76, 0x77};
+
     for (uint8_t i = 0; i < 2; i++) {
-      uint8_t a = addrs[i];
-      uint8_t id = chipId(a);
+      uint8_t addr = addrs[i];
+      uint8_t id = chipId(addr);
+
       if (id == 0x60) {
-        if (_bme.begin(a, _bus)) {
-          _bme.setSampling(Adafruit_BME280::MODE_NORMAL, Adafruit_BME280::SAMPLING_X2,
-                           Adafruit_BME280::SAMPLING_X16, Adafruit_BME280::SAMPLING_X2,
-                           Adafruit_BME280::FILTER_X4, Adafruit_BME280::STANDBY_MS_500);
+        if (_bme.begin(addr, _bus)) {
+          _bme.setSampling(
+            Adafruit_BME280::MODE_NORMAL,
+            Adafruit_BME280::SAMPLING_X2,
+            Adafruit_BME280::SAMPLING_X16,
+            Adafruit_BME280::SAMPLING_X2,
+            Adafruit_BME280::FILTER_X4,
+            Adafruit_BME280::STANDBY_MS_500
+          );
+
           _type = BME;
           return true;
         }
-      } else if (id == 0x56 || id == 0x57 || id == 0x58) {
-        if (_bmp.begin(a, id)) {
-          _bmp.setSampling(Adafruit_BMP280::MODE_NORMAL, Adafruit_BMP280::SAMPLING_X2,
-                           Adafruit_BMP280::SAMPLING_X16, Adafruit_BMP280::FILTER_X4,
-                           Adafruit_BMP280::STANDBY_MS_500);
+      }
+      else if (id == 0x56 || id == 0x57 || id == 0x58) {
+        if (_bmp.begin(addr, id)) {
+          _bmp.setSampling(
+            Adafruit_BMP280::MODE_NORMAL,
+            Adafruit_BMP280::SAMPLING_X2,
+            Adafruit_BMP280::SAMPLING_X16,
+            Adafruit_BMP280::FILTER_X4,
+            Adafruit_BMP280::STANDBY_MS_500
+          );
+
           _type = BMP;
           return true;
         }
       }
     }
+
     return false;
   }
 
-  // t: °C, h: % (NAN nếu BMP280), p: hPa. Trả về false nếu đọc lỗi (tự về NONE để begin() lại ở chu kỳ sau).
   bool read(float &t, float &h, float &p) {
-    t = h = p = NAN;
+    t = NAN;
+    h = NAN;
+    p = NAN;
+
     if (_type == NONE) return false;
-    float tt, hh = NAN, pp;
+
+    float temperature;
+    float humidity = NAN;
+    float pressure;
+
     if (_type == BME) {
-      tt = _bme.readTemperature();
-      hh = _bme.readHumidity();
-      pp = _bme.readPressure() / 100.0F;
-    } else {
-      tt = _bmp.readTemperature();
-      pp = _bmp.readPressure() / 100.0F;
+      temperature = _bme.readTemperature();
+      humidity = _bme.readHumidity();
+      pressure = _bme.readPressure() / 100.0F;
     }
-    bool bad = isnan(tt) || isnan(pp) || pp < 300.0F || pp > 1100.0F || (_type == BME && isnan(hh));
-    if (bad) { _type = NONE; return false; }
-    t = tt; h = hh; p = pp;
+    else {
+      temperature = _bmp.readTemperature();
+      pressure = _bmp.readPressure() / 100.0F;
+    }
+
+    bool bad =
+      isnan(temperature) ||
+      isnan(pressure) ||
+      pressure < 300.0F ||
+      pressure > 1100.0F ||
+      (_type == BME && isnan(humidity));
+
+    if (bad) {
+      _type = NONE;
+      return false;
+    }
+
+    t = temperature;
+    h = humidity;
+    p = pressure;
+
     return true;
   }
 
- private:
-  uint8_t chipId(uint8_t a) {
-    _bus->beginTransmission(a);
+private:
+  uint8_t chipId(uint8_t addr) {
+    _bus->beginTransmission(addr);
     _bus->write(0xD0);
-    if (_bus->endTransmission(false) != 0) return 0;
-    if (_bus->requestFrom((int)a, 1) != 1) return 0;
+
+    if (_bus->endTransmission(false) != 0) {
+      return 0;
+    }
+
+    if (_bus->requestFrom((int)addr, 1) != 1) {
+      return 0;
+    }
+
     return (uint8_t)_bus->read();
   }
 
   TwoWire *_bus;
   Adafruit_BME280 _bme;
   Adafruit_BMP280 _bmp;
+
   Type _type = NONE;
 };
 
 EnvSensor bme_ground(Wire);
 
-// ---------------- CẤU HÌNH TIMEOUT / HEARTBEAT ----------------
-const unsigned long MIN_TIMEOUT_MS = 12000;
-const unsigned long OFFLINE_REPORT_MS = 5000;
+// ============================================================
+// 3. TIMEOUT / HEARTBEAT
+// ============================================================
 
-unsigned long currentUavIntervalMs = 1000;
+const unsigned long MIN_TIMEOUT_MS = 12000UL;
+const unsigned long OFFLINE_REPORT_MS = 5000UL;
+
+unsigned long currentUavIntervalMs = 1000UL;
 unsigned long lastLoraReceived = 0;
 unsigned long lastOfflineReport = 0;
 
-// Timeout = max(12 giây, 2 chu kỳ gửi + 5 giây)
 unsigned long getConnectionTimeout() {
   unsigned long calculatedTimeout =
-      currentUavIntervalMs * 2UL + 5000UL;
+    currentUavIntervalMs * 2UL + 5000UL;
 
   return calculatedTimeout > MIN_TIMEOUT_MS
-         ? calculatedTimeout
-         : MIN_TIMEOUT_MS;
+    ? calculatedTimeout
+    : MIN_TIMEOUT_MS;
 }
 
-// Bộ đệm nhận dòng từ LoRa (không chặn)
+// ============================================================
+// 4. BO DEM NHAN LO RA
+// ============================================================
+
 #define LORA_LINE_MAX 400
-String loraLine;
+
+String loraLine = "";
 bool loraOverflow = false;
 
-// Các trường dữ liệu UAV được chuyển tiếp lên PC (thiếu trường nào -> null)
+// Cac truong telemetry duoc chuyen tiep len PC
 const char *UAV_KEYS[] = {
   "run_id",
   "boot_id",
@@ -128,144 +202,185 @@ const char *UAV_KEYS[] = {
   "t2", "h2", "p2",
   "bat", "vbat", "pwr"
 };
-const int UAV_KEYS_N = sizeof(UAV_KEYS) / sizeof(UAV_KEYS[0]);
 
-// ---------------- TIỆN ÍCH ----------------
+const int UAV_KEYS_N =
+  sizeof(UAV_KEYS) / sizeof(UAV_KEYS[0]);
+
+// ============================================================
+// 5. CAC HAM TIEN ICH
+// ============================================================
+
 float round2(float value) {
   if (isnan(value)) return NAN;
+
   return roundf(value * 100.0F) / 100.0F;
 }
 
-// Đọc cảm biến mặt đất; lỗi -> NAN (thành null trong JSON, không phải số 0 giả). BMP280: h = NAN.
 void readGround(float &t, float &h, float &p) {
-  if (!bme_ground.ok()) bme_ground.begin();   // thử cứu lại nếu đang lỗi
-  if (!bme_ground.read(t, h, p)) { t = h = p = NAN; return; }
-  t = round2(t); h = round2(h); p = round2(p);
+  if (!bme_ground.ok()) {
+    bme_ground.begin();
+  }
+
+  if (!bme_ground.read(t, h, p)) {
+    t = NAN;
+    h = NAN;
+    p = NAN;
+    return;
+  }
+
+  t = round2(t);
+  h = round2(h);
+  p = round2(p);
 }
 
 void setGround(JsonDocument &doc) {
   float t3, h3, p3;
+
   readGround(t3, h3, p3);
-  if (isnan(t3)) doc["t3"] = nullptr; else doc["t3"] = t3;
-  if (isnan(h3)) doc["h3"] = nullptr; else doc["h3"] = h3;
-  if (isnan(p3)) doc["p3"] = nullptr; else doc["p3"] = p3;
+
+  if (isnan(t3)) doc["t3"] = nullptr;
+  else doc["t3"] = t3;
+
+  if (isnan(h3)) doc["h3"] = nullptr;
+  else doc["h3"] = h3;
+
+  if (isnan(p3)) doc["p3"] = nullptr;
+  else doc["p3"] = p3;
 }
 
-// ---------------- SETUP / LOOP ----------------
-void setup() {
-  Serial.begin(115200);
-  Serial.setTimeout(100);
-  delay(200);
+// Cap nhat chu ky truyen neu JSON co interval_ms hop le
+void updateUavInterval(JsonDocument &doc) {
+  if (doc["interval_ms"].isNull()) {
+    return;
+  }
 
-  // Buffer nhận 256 byte (mặc định 64) để không rớt byte khi loop bận
-  loraSerial.begin(9600, SWSERIAL_8N1, LORA_RX, LORA_TX, false, 256);
-
-  Wire.begin(I2C_SDA, I2C_SCL);
-  bme_ground.begin();
-
-  lastLoraReceived = millis();
-// Cập nhật chu kỳ gửi hiện tại từ UAV.
-// interval_ms phải là milliseconds.
-if (uavDoc["interval_ms"].is<unsigned long>()) {
   unsigned long receivedInterval =
-      uavDoc["interval_ms"].as<unsigned long>();
+    doc["interval_ms"].as<unsigned long>();
 
-  // Chỉ chấp nhận chu kỳ từ 1 đến 60 giây.
-  if (receivedInterval >= 1000 &&
-      receivedInterval <= 60000) {
+  if (receivedInterval >= 1000UL &&
+      receivedInterval <= 60000UL) {
     currentUavIntervalMs = receivedInterval;
   }
 }
 
-// ---------------- NHẬN DỮ LIỆU TỪ UAV & GỘP DỮ LIỆU MẶT ĐẤT ----------------
+// ============================================================
+// 6. XU LY DU LIEU NHAN TU UAV
+// ============================================================
+
 void handleUavLine(const String &line) {
   JsonDocument uavDoc;
-  DeserializationError error = deserializeJson(uavDoc, line);
-  if (error) return;                       // gói nhiễu, bỏ qua
 
-  lastLoraReceived = millis();             // UAV còn sống (cả data lẫn ack)
+  DeserializationError error =
+    deserializeJson(uavDoc, line);
 
-  JsonDocument outDoc;
-
-  // Phản hồi lệnh từ UAV -> báo riêng, KHÔNG tạo dòng dữ liệu rỗng cho database
-  if (uavDoc["ack"].is<const char *>()) {
-    outDoc["status"] = "ack";
-    outDoc["ack"] = uavDoc["ack"];
-    serializeJson(outDoc, Serial);
-    Serial.println();
+  if (error) {
     return;
   }
 
-  // Gói dữ liệu: gộp UAV + mặt đất
+  // JSON hop le tu UAV: cap nhat heartbeat
+  lastLoraReceived = millis();
+
+  // Cap nhat timeout theo chu ky UAV
+  updateUavInterval(uavDoc);
+
+  JsonDocument outDoc;
+
+  // ----------------------------------------------------------
+  // ACK tu UAV
+  // ----------------------------------------------------------
+
+  if (uavDoc["ack"].is<const char *>()) {
+    outDoc["status"] = "ack";
+    outDoc["ack"] = uavDoc["ack"];
+
+    if (!uavDoc["interval_ms"].isNull()) {
+      outDoc["interval_ms"] = uavDoc["interval_ms"];
+    }
+
+    serializeJson(outDoc, Serial);
+    Serial.println();
+
+    return;
+  }
+
+  // ----------------------------------------------------------
+  // TELEMETRY TU UAV
+  // ----------------------------------------------------------
+
   outDoc["status"] = "online";
 
   for (int i = 0; i < UAV_KEYS_N; i++) {
-  outDoc[UAV_KEYS[i]] = uavDoc[UAV_KEYS[i]];
-}
+    outDoc[UAV_KEYS[i]] = uavDoc[UAV_KEYS[i]];
+  }
 
-// Thời điểm Ground nhận được gói, tính theo uptime của ESP8266.
-// Đây chưa phải Unix timestamp.
-outDoc["rx_uptime_ms"] = millis();
+  // Thoi diem Ground nhan du lieu theo uptime ESP8266
+  outDoc["rx_uptime_ms"] = millis();
 
-setGround(outDoc);
+  // Them du lieu cam bien mat dat
+  setGround(outDoc);
 
-  serializeJson(outDoc, Serial);           // đúng 1 dòng JSON thuần qua USB
+  serializeJson(outDoc, Serial);
   Serial.println();
 }
+
+// ============================================================
+// 7. NHAN DU LIEU TU LORA
+// ============================================================
 
 void receiveFromUAV() {
   while (loraSerial.available()) {
     char c = (char)loraSerial.read();
-    if (c == '\r') continue;
+
+    if (c == '\r') {
+      continue;
+    }
+
     if (c == '\n') {
       if (!loraOverflow && loraLine.length() > 0) {
         handleUavLine(loraLine);
       }
+
       loraLine = "";
       loraOverflow = false;
-    } else if (loraLine.length() < LORA_LINE_MAX) {
-      loraLine += c;
-    } else {
-      loraOverflow = true;                 // dòng quá dài -> bỏ cả dòng
+    }
+    else {
+      if (loraLine.length() < LORA_LINE_MAX) {
+        loraLine += c;
+      }
+      else {
+        loraOverflow = true;
+      }
     }
   }
 }
 
-// ---------------- CHUYỂN TIẾP LỆNH TỪ PC LÊN UAV (2 CHIỀU) ----------------
-//void forwardCommandToUAV() {
-//  if (Serial.available()) {
-//    String cmd = Serial.readStringUntil('\n');
-//    cmd.trim();
-//    if (cmd.length() > 0) {
-      // VD: SPEED_1S, SPEED_5S, RESET_UAV, SET_FREQ:3, PING (có hoặc không có < >)
-//      loraSerial.println(cmd);
-//    }
-//  }
-//}
+// ============================================================
+// 8. CHUYEN LENH TU PC LEN UAV
+// ============================================================
 
 void forwardCommandToUAV() {
-  if (Serial.available()) {
-    String cmd = Serial.readStringUntil('\n');
-    cmd.trim();
-
-    if (cmd.length() == 0) {
-      return;
-    }
-
-    
-
-    loraSerial.println(cmd);
-    loraSerial.flush();
-
-    
+  if (!Serial.available()) {
+    return;
   }
+
+  String cmd = Serial.readStringUntil('\n');
+  cmd.trim();
+
+  if (cmd.length() == 0) {
+    return;
+  }
+
+  // Gui lenh qua LoRa E32
+  loraSerial.println(cmd);
+  loraSerial.flush();
 }
 
+// ============================================================
+// 9. KIEM TRA MAT KET NOI
+// ============================================================
 
-// ---------------- CẢNH BÁO MẤT KẾT NỐI (HEARTBEAT TIMEOUT) ----------------
 void checkConnectionTimeout() {
   unsigned long now = millis();
-
   unsigned long timeoutMs = getConnectionTimeout();
 
   if (now - lastLoraReceived > timeoutMs) {
@@ -273,11 +388,56 @@ void checkConnectionTimeout() {
       lastOfflineReport = now;
 
       JsonDocument alertDoc;
+
       alertDoc["status"] = "offline";
+
       setGround(alertDoc);
 
       serializeJson(alertDoc, Serial);
       Serial.println();
     }
   }
+}
+
+// ============================================================
+// 10. SETUP
+// ============================================================
+
+void setup() {
+  Serial.begin(115200);
+  Serial.setTimeout(100);
+
+  delay(200);
+
+  // LoRa E32 UART
+  loraSerial.begin(
+    9600,
+    SWSERIAL_8N1,
+    LORA_RX,
+    LORA_TX,
+    false,
+    256
+  );
+
+  // I2C Ground Sensor
+  Wire.begin(I2C_SDA, I2C_SCL);
+
+  bme_ground.begin();
+
+  lastLoraReceived = millis();
+  lastOfflineReport = millis();
+}
+
+// ============================================================
+// 11. LOOP - BAT BUOC PHAI CO
+// ============================================================
+
+void loop() {
+  receiveFromUAV();
+
+  forwardCommandToUAV();
+
+  checkConnectionTimeout();
+
+  yield();
 }
