@@ -94,10 +94,22 @@ class EnvSensor {
 EnvSensor bme_ground(Wire);
 
 // ---------------- CẤU HÌNH TIMEOUT / HEARTBEAT ----------------
-const unsigned long TIMEOUT_MS = 12000;        // Quá 12 s không nhận được gì từ UAV -> Offline
-const unsigned long OFFLINE_REPORT_MS = 5000;  // Khi Offline, báo lên PC mỗi 5 s
+const unsigned long MIN_TIMEOUT_MS = 12000;
+const unsigned long OFFLINE_REPORT_MS = 5000;
+
+unsigned long currentUavIntervalMs = 1000;
 unsigned long lastLoraReceived = 0;
 unsigned long lastOfflineReport = 0;
+
+// Timeout = max(12 giây, 2 chu kỳ gửi + 5 giây)
+unsigned long getConnectionTimeout() {
+  unsigned long calculatedTimeout =
+      currentUavIntervalMs * 2UL + 5000UL;
+
+  return calculatedTimeout > MIN_TIMEOUT_MS
+         ? calculatedTimeout
+         : MIN_TIMEOUT_MS;
+}
 
 // Bộ đệm nhận dòng từ LoRa (không chặn)
 #define LORA_LINE_MAX 400
@@ -152,12 +164,17 @@ void setup() {
   bme_ground.begin();
 
   lastLoraReceived = millis();
-}
+// Cập nhật chu kỳ gửi hiện tại từ UAV.
+// interval_ms phải là milliseconds.
+if (uavDoc["interval_ms"].is<unsigned long>()) {
+  unsigned long receivedInterval =
+      uavDoc["interval_ms"].as<unsigned long>();
 
-void loop() {
-  receiveFromUAV();
-  forwardCommandToUAV();
-  checkConnectionTimeout();
+  // Chỉ chấp nhận chu kỳ từ 1 đến 60 giây.
+  if (receivedInterval >= 1000 &&
+      receivedInterval <= 60000) {
+    currentUavIntervalMs = receivedInterval;
+  }
 }
 
 // ---------------- NHẬN DỮ LIỆU TỪ UAV & GỘP DỮ LIỆU MẶT ĐẤT ----------------
@@ -248,7 +265,10 @@ void forwardCommandToUAV() {
 // ---------------- CẢNH BÁO MẤT KẾT NỐI (HEARTBEAT TIMEOUT) ----------------
 void checkConnectionTimeout() {
   unsigned long now = millis();
-  if (now - lastLoraReceived > TIMEOUT_MS) {
+
+  unsigned long timeoutMs = getConnectionTimeout();
+
+  if (now - lastLoraReceived > timeoutMs) {
     if (now - lastOfflineReport >= OFFLINE_REPORT_MS) {
       lastOfflineReport = now;
 
