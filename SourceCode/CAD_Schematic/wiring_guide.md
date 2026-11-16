@@ -79,8 +79,8 @@ Cáp USB 5 V cắm trực tiếp vào cổng microUSB của board (đồng thờ
 |---|---|
 | VIN | 3V (3.3 V) |
 | GND | G |
-| SCL | D5 (GPIO 14) |
-| SDA | D6 (GPIO 12) |
+| SCL | D6 (GPIO 12) |
+| SDA | D5 (GPIO 14) |
 
 ## 3. Lưu ý chung
 
