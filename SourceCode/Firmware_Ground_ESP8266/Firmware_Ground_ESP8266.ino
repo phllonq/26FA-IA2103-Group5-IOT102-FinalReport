@@ -105,7 +105,17 @@ String loraLine;
 bool loraOverflow = false;
 
 // Các trường dữ liệu UAV được chuyển tiếp lên PC (thiếu trường nào -> null)
-const char *UAV_KEYS[] = {"seq", "t1", "h1", "p1", "t2", "h2", "p2", "bat", "vbat", "pwr"};
+const char *UAV_KEYS[] = {
+  "run_id",
+  "boot_id",
+  "seq",
+  "uptime_ms",
+  "interval_ms",
+  "mode",
+  "t1", "h1", "p1",
+  "t2", "h2", "p2",
+  "bat", "vbat", "pwr"
+};
 const int UAV_KEYS_N = sizeof(UAV_KEYS) / sizeof(UAV_KEYS[0]);
 
 // ---------------- TIỆN ÍCH ----------------
@@ -171,10 +181,16 @@ void handleUavLine(const String &line) {
 
   // Gói dữ liệu: gộp UAV + mặt đất
   outDoc["status"] = "online";
+
   for (int i = 0; i < UAV_KEYS_N; i++) {
-    outDoc[UAV_KEYS[i]] = uavDoc[UAV_KEYS[i]];   // thiếu / null -> null
-  }
-  setGround(outDoc);
+  outDoc[UAV_KEYS[i]] = uavDoc[UAV_KEYS[i]];
+}
+
+// Thời điểm Ground nhận được gói, tính theo uptime của ESP8266.
+// Đây chưa phải Unix timestamp.
+outDoc["rx_uptime_ms"] = millis();
+
+setGround(outDoc);
 
   serializeJson(outDoc, Serial);           // đúng 1 dòng JSON thuần qua USB
   Serial.println();
